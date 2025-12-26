@@ -44,7 +44,7 @@ class ItemController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'sku' => ['required', 'string', 'max:255', 'unique:items,sku'],
+            'sku' => ['nullable', 'string', 'max:255', 'unique:items,sku'],
             'item_type' => ['required', 'string', 'in:supplier,regular'],
             'supplier_id' => ['nullable', 'integer', 'exists:suppliers,id'],
             'name' => ['required', 'string', 'max:255'],
@@ -52,20 +52,48 @@ class ItemController extends Controller
             'price' => ['nullable', 'integer', 'min:0'],
         ]);
 
+        $sku = isset($validated['sku']) ? trim((string) $validated['sku']) : '';
+        if ($sku === '') {
+            $base = strtoupper(preg_replace('/[^A-Z0-9]+/i', '-', (string) $validated['name']));
+            $base = trim($base, '-') ?: 'ITEM';
+            $base = substr($base, 0, 20);
+
+            do {
+                $candidate = $base . '-' . random_int(1000, 9999);
+            } while (Item::query()->where('sku', $candidate)->exists());
+
+            $sku = $candidate;
+        }
+
         if ($validated['item_type'] === 'supplier' && empty($validated['supplier_id'])) {
             return back()->withErrors(['supplier_id' => 'Supplier wajib dipilih untuk barang supplier.'])->withInput();
         }
 
         Item::query()->create([
-            'sku' => $validated['sku'],
+            'sku' => $sku,
             'item_type' => $validated['item_type'],
             'supplier_id' => $validated['item_type'] === 'supplier' ? $validated['supplier_id'] : null,
             'name' => $validated['name'],
             'unit' => $validated['unit'],
             'price' => $validated['price'] ?? 0,
             'stock' => 0,
-            'is_active' => $request->boolean('is_active'),
+            'is_active' => $request->has('is_active') ? $request->boolean('is_active') : true,
         ]);
+
+        $redirectRoute = trim((string) $request->input('redirect_route', ''));
+        $openSupplierId = $request->input('open_supplier_id');
+        $allowedRedirectRoutes = [
+            'masters.suppliers',
+            'masters.items_supplier',
+            'masters.items',
+        ];
+        if ($redirectRoute !== '' && in_array($redirectRoute, $allowedRedirectRoutes, true)) {
+            if ($redirectRoute === 'masters.suppliers' && $openSupplierId) {
+                return redirect()->route($redirectRoute, ['open_supplier_id' => $openSupplierId]);
+            }
+
+            return redirect()->route($redirectRoute);
+        }
 
         return $validated['item_type'] === 'supplier'
             ? redirect()->route('masters.items_supplier', ['supplier_id' => $validated['supplier_id']])
@@ -93,8 +121,23 @@ class ItemController extends Controller
         $item->name = $validated['name'];
         $item->unit = $validated['unit'];
         $item->price = $validated['price'] ?? 0;
-        $item->is_active = $request->boolean('is_active');
+        $item->is_active = $request->has('is_active') ? $request->boolean('is_active') : true;
         $item->save();
+
+        $redirectRoute = trim((string) $request->input('redirect_route', ''));
+        $openSupplierId = $request->input('open_supplier_id');
+        $allowedRedirectRoutes = [
+            'masters.suppliers',
+            'masters.items_supplier',
+            'masters.items',
+        ];
+        if ($redirectRoute !== '' && in_array($redirectRoute, $allowedRedirectRoutes, true)) {
+            if ($redirectRoute === 'masters.suppliers' && $openSupplierId) {
+                return redirect()->route($redirectRoute, ['open_supplier_id' => $openSupplierId]);
+            }
+
+            return redirect()->route($redirectRoute);
+        }
 
         return $validated['item_type'] === 'supplier'
             ? redirect()->route('masters.items_supplier', ['supplier_id' => $validated['supplier_id']])
@@ -106,6 +149,21 @@ class ItemController extends Controller
         $itemType = $item->item_type;
         $supplierId = $item->supplier_id;
         $item->delete();
+
+        $redirectRoute = trim((string) request()->input('redirect_route', ''));
+        $openSupplierId = request()->input('open_supplier_id');
+        $allowedRedirectRoutes = [
+            'masters.suppliers',
+            'masters.items_supplier',
+            'masters.items',
+        ];
+        if ($redirectRoute !== '' && in_array($redirectRoute, $allowedRedirectRoutes, true)) {
+            if ($redirectRoute === 'masters.suppliers' && $openSupplierId) {
+                return redirect()->route($redirectRoute, ['open_supplier_id' => $openSupplierId]);
+            }
+
+            return redirect()->route($redirectRoute);
+        }
 
         return $itemType === 'supplier'
             ? redirect()->route('masters.items_supplier', ['supplier_id' => $supplierId])

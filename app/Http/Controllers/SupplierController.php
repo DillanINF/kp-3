@@ -45,12 +45,14 @@ class SupplierController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'contact_name' => ['nullable', 'string', 'max:255'],
             'phone' => ['nullable', 'string', 'max:50'],
+            'email' => ['nullable', 'email', 'max:255'],
             'address' => ['nullable', 'string', 'max:255'],
         ]);
 
         $supplier->name = $validated['name'];
         $supplier->contact_name = $validated['contact_name'] ?? null;
         $supplier->phone = $validated['phone'] ?? null;
+        $supplier->email = $validated['email'] ?? null;
         $supplier->address = $validated['address'] ?? null;
         $supplier->is_active = $request->boolean('is_active');
         $supplier->save();

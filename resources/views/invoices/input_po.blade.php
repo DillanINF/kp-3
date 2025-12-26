@@ -33,15 +33,6 @@
                 </div>
 
                 <div class="space-y-2 lg:col-span-2">
-                    <label class="text-sm font-semibold text-slate-700">No Surat Jalan</label>
-                    <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
-                        <input data-po-sj-no type="text" placeholder="34243" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" />
-                        <input data-po-sj-kode type="text" placeholder="BAG-2025" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" />
-                        <input data-po-sj-tahun type="text" placeholder="2025" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" />
-                    </div>
-                </div>
-
-                <div class="space-y-2 lg:col-span-2">
                     <label class="text-sm font-semibold text-slate-700">Alamat</label>
                     <input data-po-alamat type="text" placeholder="JLN. DAYAT" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" />
                 </div>

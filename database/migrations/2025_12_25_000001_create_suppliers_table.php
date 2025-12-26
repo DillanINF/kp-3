@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('contact_name')->nullable();
             $table->string('phone', 50)->nullable();
+            $table->string('email')->nullable();
             $table->string('city')->nullable();
             $table->string('address')->nullable();
             $table->boolean('is_active')->default(true);

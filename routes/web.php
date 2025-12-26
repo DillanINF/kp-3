@@ -9,6 +9,7 @@ use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\SupplierRequestController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -49,7 +50,12 @@ Route::middleware('auth')->group(function () {
         Route::delete('/suppliers/{supplier}', [SupplierController::class, 'destroy'])->middleware('role:admin')->name('suppliers.destroy');
 
         Route::get('/items', [ItemController::class, 'index'])->name('items');
-        Route::get('/items-supplier', [ItemController::class, 'supplierIndex'])->name('items_supplier');
+        Route::get('/items-supplier', [SupplierRequestController::class, 'index'])->name('items_supplier');
+        Route::post('/items-supplier', [SupplierRequestController::class, 'store'])->middleware('role:admin')->name('items_supplier.store');
+        Route::put('/items-supplier/{supplierRequest}', [SupplierRequestController::class, 'update'])->middleware('role:admin')->name('items_supplier.update');
+        Route::post('/items-supplier/{supplierRequest}/send', [SupplierRequestController::class, 'send'])->middleware('role:admin')->name('items_supplier.send');
+        Route::post('/items-supplier/{supplierRequest}/accept', [SupplierRequestController::class, 'accept'])->middleware('role:admin')->name('items_supplier.accept');
+        Route::delete('/items-supplier/{supplierRequest}', [SupplierRequestController::class, 'destroy'])->middleware('role:admin')->name('items_supplier.destroy');
         Route::post('/items', [ItemController::class, 'store'])->middleware('role:admin')->name('items.store');
         Route::put('/items/{item}', [ItemController::class, 'update'])->middleware('role:admin')->name('items.update');
         Route::delete('/items/{item}', [ItemController::class, 'destroy'])->middleware('role:admin')->name('items.destroy');

@@ -48,11 +48,21 @@ document.addEventListener('click', (e) => {
         const itemType = openTrigger.getAttribute('data-item-type');
         const supplierId = openTrigger.getAttribute('data-supplier-id');
         if (itemType && modalId === 'modal-tambah-item') {
-            const itemTypeEl = document.querySelector('[data-add-item-type]');
+            const itemTypeEl = document.querySelector('#modal-tambah-item [data-add-item-type]');
             if (itemTypeEl) itemTypeEl.value = itemType;
 
-            const supplierEl = document.querySelector('[data-add-item-supplier]');
+            const supplierEl = document.querySelector('#modal-tambah-item [data-add-item-supplier]');
             if (supplierEl && supplierId) supplierEl.value = supplierId;
+
+            const openSupplierEl = document.querySelector('#modal-tambah-item [data-open-supplier-id]');
+            if (openSupplierEl && supplierId) openSupplierEl.value = supplierId;
+
+            const nameEl = document.querySelector('#modal-tambah-item [name="name"]');
+            const unitEl = document.querySelector('#modal-tambah-item [name="unit"]');
+            const priceEl = document.querySelector('#modal-tambah-item [name="price"]');
+            if (nameEl) nameEl.value = '';
+            if (unitEl) unitEl.value = 'pcs';
+            if (priceEl) priceEl.value = '0';
         }
 
         openModal(modalId);
@@ -215,23 +225,18 @@ const hydratePoPageFromQuery = () => {
 
     const customerEl = document.querySelector('[data-po-customer-name]');
     const noPoEl = document.querySelector('[data-po-no-po]');
-    const sjNoEl = document.querySelector('[data-po-sj-no]');
-    const sjKodeEl = document.querySelector('[data-po-sj-kode]');
-    const sjTahunEl = document.querySelector('[data-po-sj-tahun]');
     const alamatEl = document.querySelector('[data-po-alamat]');
 
     if (customerEl) customerEl.value = String(row.customerName ?? '');
     if (noPoEl) noPoEl.value = row.noPo ? String(row.noPo) : '';
 
     const details = row?.poDetails || {};
-    if (sjNoEl) sjNoEl.value = String(details.suratJalanNo ?? '');
-    if (sjKodeEl) sjKodeEl.value = String(details.suratJalanKode ?? '');
-    if (sjTahunEl) sjTahunEl.value = String(details.suratJalanTahun ?? '');
     if (alamatEl) {
         const alamat = String(details.alamat ?? '').trim();
         if (alamat.length > 0) {
             alamatEl.value = alamat;
-        } else {
+        }
+ else {
             const legacyAlamat1 = String(details.alamat1 ?? '').trim();
             const legacyAlamat2 = String(details.alamat2 ?? '').trim();
             alamatEl.value = [legacyAlamat1, legacyAlamat2].filter(Boolean).join(' ').trim();
@@ -347,9 +352,6 @@ const savePoPage = () => {
     }
 
     const noPoEl = document.querySelector('[data-po-no-po]');
-    const sjNoEl = document.querySelector('[data-po-sj-no]');
-    const sjKodeEl = document.querySelector('[data-po-sj-kode]');
-    const sjTahunEl = document.querySelector('[data-po-sj-tahun]');
     const alamatEl = document.querySelector('[data-po-alamat]');
 
     const noPo = (noPoEl?.value || '').trim();
@@ -359,9 +361,6 @@ const savePoPage = () => {
     const grandTotal = items.reduce((acc, it) => acc + (Number.isFinite(it.total) ? it.total : 0), 0);
 
     const poDetails = {
-        suratJalanNo: (sjNoEl?.value || '').trim() || null,
-        suratJalanKode: (sjKodeEl?.value || '').trim() || null,
-        suratJalanTahun: (sjTahunEl?.value || '').trim() || null,
         alamat: (alamatEl?.value || '').trim() || null,
         items,
         grandTotal,
@@ -470,10 +469,7 @@ const updateDashboardKpis = () => {
 
     const poPending = rows.filter((r) => {
         const hasPo = String(r?.noPo ?? '').trim().length > 0;
-        if (!hasPo) return false;
-        const details = r?.poDetails || {};
-        const sjNo = String(details?.suratJalanNo ?? '').trim();
-        return sjNo.length === 0;
+        return !hasPo;
     }).length;
 
     const invEl = root.querySelector('[data-kpi="invoice-this-month"]');
@@ -710,6 +706,7 @@ document.addEventListener('click', (e) => {
         const name = editSupplierBtn.getAttribute('data-supplier-name') || '';
         const contact = editSupplierBtn.getAttribute('data-supplier-contact') || '';
         const phone = editSupplierBtn.getAttribute('data-supplier-phone') || '';
+        const email = editSupplierBtn.getAttribute('data-supplier-email') || '';
         const address = editSupplierBtn.getAttribute('data-supplier-address') || '';
         const isActive = editSupplierBtn.getAttribute('data-supplier-active') || '0';
 
@@ -724,12 +721,14 @@ document.addEventListener('click', (e) => {
         const nameEl = document.querySelector('[data-edit-supplier-name]');
         const contactEl = document.querySelector('[data-edit-supplier-contact]');
         const phoneEl = document.querySelector('[data-edit-supplier-phone]');
+        const emailEl = document.querySelector('[data-edit-supplier-email]');
         const addressEl = document.querySelector('[data-edit-supplier-address]');
         const activeEl = document.querySelector('[data-edit-supplier-active]');
 
         if (nameEl) nameEl.value = name;
         if (contactEl) contactEl.value = contact;
         if (phoneEl) phoneEl.value = phone;
+        if (emailEl) emailEl.value = email;
         if (addressEl) addressEl.value = address;
         if (activeEl) activeEl.checked = isActive === '1';
 
@@ -741,7 +740,7 @@ document.addEventListener('click', (e) => {
     if (editItemBtn) {
         const id = editItemBtn.getAttribute('data-item-id');
         const sku = editItemBtn.getAttribute('data-item-sku') || '';
-        const itemType = editItemBtn.getAttribute('data-item-type') || 'regular';
+        const itemType = editItemBtn.getAttribute('data-item-type') || '';
         const supplierId = editItemBtn.getAttribute('data-item-supplier-id') || '';
         const name = editItemBtn.getAttribute('data-item-name') || '';
         const unit = editItemBtn.getAttribute('data-item-unit') || '';
@@ -766,11 +765,14 @@ document.addEventListener('click', (e) => {
 
         if (skuEl) skuEl.value = sku;
         if (itemTypeEl) itemTypeEl.value = itemType;
-        if (supplierEl && itemType === 'supplier') supplierEl.value = supplierId;
+        if (supplierEl) supplierEl.value = supplierId;
         if (nameEl) nameEl.value = name;
         if (unitEl) unitEl.value = unit;
         if (priceEl) priceEl.value = price;
         if (activeEl) activeEl.checked = isActive === '1';
+
+        const openSupplierEl = document.querySelector('#modal-edit-item [data-open-supplier-id]');
+        if (openSupplierEl) openSupplierEl.value = supplierId;
 
         openModal('modal-edit-item');
         return;
