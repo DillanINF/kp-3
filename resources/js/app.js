@@ -8,6 +8,20 @@ const openModal = (id) => {
     document.documentElement.classList.add('overflow-hidden');
 };
 
+const reindexPoRows = () => {
+    const tbody = document.querySelector('[data-po-items]');
+    if (!tbody) return;
+
+    const rows = Array.from(tbody.querySelectorAll('[data-po-item-row]'));
+    rows.forEach((row, idx) => {
+        row.querySelectorAll('select[name], input[name]').forEach((el) => {
+            const name = el.getAttribute('name') || '';
+            const updated = name.replace(/items\[\d+\]/g, `items[${idx}]`);
+            if (updated !== name) el.setAttribute('name', updated);
+        });
+    });
+};
+
 const toDateFromIdString = (value) => {
     const raw = String(value ?? '').trim();
     if (!raw) return null;
@@ -200,53 +214,47 @@ const navigateToInputPo = (invoiceNo) => {
     window.location.href = url.toString();
 };
 
-const hydratePoPageFromQuery = () => {
-    const poPage = document.querySelector('[data-po-page]');
-    if (!poPage) return;
+const hydratePoPageFromDom = () => {
+    const poItems = document.querySelector('[data-po-items]');
+    if (!poItems) return;
 
-    const qs = new URLSearchParams(window.location.search);
-    const invoiceNo = Number.parseInt(qs.get('invoiceNo') || '', 10);
-    if (!Number.isFinite(invoiceNo)) {
-        window.alert('Invoice belum dipilih.');
-        const backUrl = poPage?.dataset?.backUrl;
-        if (backUrl) window.location.href = String(backUrl);
-        return;
-    }
-
-    const row = getInvoiceByNo(invoiceNo);
-    if (!row) {
-        window.alert('Data invoice tidak ditemukan.');
-        const backUrl = poPage?.dataset?.backUrl;
-        if (backUrl) window.location.href = String(backUrl);
-        return;
-    }
-
-    poPage.dataset.invoiceNo = String(invoiceNo);
-
-    const customerEl = document.querySelector('[data-po-customer-name]');
-    const noPoEl = document.querySelector('[data-po-no-po]');
-    const alamatEl = document.querySelector('[data-po-alamat]');
-
-    if (customerEl) customerEl.value = String(row.customerName ?? '');
-    if (noPoEl) noPoEl.value = row.noPo ? String(row.noPo) : '';
-
-    const details = row?.poDetails || {};
-    if (alamatEl) {
-        const alamat = String(details.alamat ?? '').trim();
-        if (alamat.length > 0) {
-            alamatEl.value = alamat;
+    poItems.querySelectorAll('[data-po-item-row]').forEach((row) => {
+        const selectEl = row.querySelector('[data-po-item-id]');
+        const unitEl = row.querySelector('[data-po-item-unit]');
+        if (selectEl && unitEl) {
+            const unit = selectEl.selectedOptions?.[0]?.dataset?.unit;
+            if (unit) unitEl.value = String(unit);
         }
- else {
-            const legacyAlamat1 = String(details.alamat1 ?? '').trim();
-            const legacyAlamat2 = String(details.alamat2 ?? '').trim();
-            alamatEl.value = [legacyAlamat1, legacyAlamat2].filter(Boolean).join(' ').trim();
-        }
-    }
+    });
 
-    const items = Array.isArray(details.items) ? details.items : [];
-    renderPoItems(items);
+    recalcPoTotals();
+};
 
-    if (noPoEl) noPoEl.focus();
+const addPoRow = () => {
+    const tbody = document.querySelector('[data-po-items]');
+    if (!tbody) return;
+
+    const rows = tbody.querySelectorAll('[data-po-item-row]');
+    const last = rows[rows.length - 1];
+    if (!last) return;
+
+    const clone = last.cloneNode(true);
+
+    const selectEl = clone.querySelector('[data-po-item-id]');
+    const qtyEl = clone.querySelector('[data-po-item-qty]');
+    const unitEl = clone.querySelector('[data-po-item-unit]');
+    const priceEl = clone.querySelector('[data-po-item-price]');
+    const totalEl = clone.querySelector('[data-po-item-total]');
+
+    if (selectEl) selectEl.value = '';
+    if (qtyEl) qtyEl.value = '1';
+    if (priceEl) priceEl.value = '0';
+    if (unitEl) unitEl.value = 'pcs';
+    if (totalEl) totalEl.value = '0';
+
+    tbody.appendChild(clone);
+    reindexPoRows();
+    recalcPoTotals();
 };
 
 const buildPoItemRow = (item = {}) => {
@@ -254,12 +262,12 @@ const buildPoItemRow = (item = {}) => {
     tr.setAttribute('data-po-item-row', '');
     tr.innerHTML = `
         <td class="px-4 py-3">
-            <input data-po-item-product type="text" placeholder="Pilih Produk" class="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" />
+            <select data-po-item-id class="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"></select>
         </td>
         <td class="px-4 py-3">
             <div class="grid grid-cols-[1fr_84px] gap-2">
                 <input data-po-item-qty type="number" min="0" step="1" placeholder="0" class="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" />
-                <input data-po-item-unit type="text" value="pcs" class="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700 outline-none" />
+                <input data-po-item-unit type="text" value="pcs" disabled class="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700 outline-none" />
             </div>
         </td>
         <td class="px-4 py-3">
@@ -273,35 +281,35 @@ const buildPoItemRow = (item = {}) => {
         </td>
     `;
 
-    const productEl = tr.querySelector('[data-po-item-product]');
+    const itemSelect = tr.querySelector('[data-po-item-id]');
     const qtyEl = tr.querySelector('[data-po-item-qty]');
     const unitEl = tr.querySelector('[data-po-item-unit]');
     const priceEl = tr.querySelector('[data-po-item-price]');
 
-    if (productEl) productEl.value = String(item.product ?? '');
+    if (itemSelect) {
+        const template = document.querySelector('[data-po-item-options-template]');
+        if (template) {
+            itemSelect.innerHTML = template.innerHTML;
+        } else {
+            itemSelect.innerHTML = '<option value="">-- Pilih Produk --</option>';
+        }
+    }
     if (qtyEl) qtyEl.value = String(item.qty ?? '');
     if (unitEl) unitEl.value = String(item.unit ?? 'pcs');
     if (priceEl) priceEl.value = String(item.price ?? '');
 
+    if (itemSelect && unitEl) {
+        const unit = itemSelect.selectedOptions?.[0]?.dataset?.unit;
+        if (unit) unitEl.value = String(unit);
+    }
+
     return tr;
-};
-
-const renderPoItems = (items) => {
-    const tbody = document.querySelector('[data-po-items]');
-    if (!tbody) return;
-
-    tbody.innerHTML = '';
-
-    const normalized = Array.isArray(items) && items.length > 0 ? items : [{}];
-    normalized.forEach((item) => {
-        tbody.appendChild(buildPoItemRow(item));
-    });
-    recalcPoTotals();
 };
 
 const recalcPoTotals = () => {
     const poPage = document.querySelector('[data-po-page]');
-    if (!poPage) return;
+    const poItems = document.querySelector('[data-po-items]');
+    if (!poItems) return;
 
     let grandTotal = 0;
     const rows = document.querySelectorAll('[data-po-items] [data-po-item-row]');
@@ -316,76 +324,6 @@ const recalcPoTotals = () => {
 
     const gt = document.querySelector('[data-po-grand-total]');
     if (gt) gt.value = String(grandTotal);
-};
-
-const collectPoItems = () => {
-    const rows = Array.from(document.querySelectorAll('[data-po-items] [data-po-item-row]'));
-    return rows
-        .map((row) => {
-            const product = (row.querySelector('[data-po-item-product]')?.value || '').trim();
-            const qty = toIntOrNull(row.querySelector('[data-po-item-qty]')?.value);
-            const unit = (row.querySelector('[data-po-item-unit]')?.value || 'pcs').trim() || 'pcs';
-            const price = toIntOrNull(row.querySelector('[data-po-item-price]')?.value);
-            const total = (Number.isFinite(qty) ? qty : 0) * (Number.isFinite(price) ? price : 0);
-
-            if (product.length === 0 && !Number.isFinite(qty) && !Number.isFinite(price)) return null;
-
-            return {
-                product: product.length > 0 ? product : null,
-                qty: Number.isFinite(qty) ? qty : null,
-                unit,
-                price: Number.isFinite(price) ? price : null,
-                total,
-            };
-        })
-        .filter(Boolean);
-};
-
-const savePoPage = () => {
-    const poPage = document.querySelector('[data-po-page]');
-    if (!poPage) return;
-
-    const invoiceNo = Number.parseInt(poPage.dataset.invoiceNo || '', 10);
-    if (!Number.isFinite(invoiceNo)) {
-        window.alert('Invoice belum dipilih.');
-        return;
-    }
-
-    const noPoEl = document.querySelector('[data-po-no-po]');
-    const alamatEl = document.querySelector('[data-po-alamat]');
-
-    const noPo = (noPoEl?.value || '').trim();
-
-    const items = collectPoItems();
-    const qtySum = items.reduce((acc, it) => acc + (Number.isFinite(it.qty) ? it.qty : 0), 0);
-    const grandTotal = items.reduce((acc, it) => acc + (Number.isFinite(it.total) ? it.total : 0), 0);
-
-    const poDetails = {
-        alamat: (alamatEl?.value || '').trim() || null,
-        items,
-        grandTotal,
-        qtySum,
-    };
-
-    const rows = readInvoiceRows();
-    const updated = rows.map((r) => {
-        const n = Number.parseInt(r?.invoiceNo, 10);
-        if (n !== invoiceNo) return r;
-        return {
-            ...r,
-            noPo: noPo.length > 0 ? noPo : null,
-            totalPo: grandTotal > 0 ? String(grandTotal) : null,
-            qty: qtySum > 0 ? String(qtySum) : null,
-            dateStr: r.dateStr || null,
-            poDetails,
-        };
-    });
-
-    writeInvoiceRows(updated);
-    const backUrl = poPage?.dataset?.backUrl;
-    if (backUrl) {
-        window.location.href = String(backUrl);
-    }
 };
 
 const buildInvoiceRow = ({ invoiceNo, customerName, noPo, totalPo, qty, dateStr }) => {
@@ -645,11 +583,7 @@ const handleAturInvoice = () => {
 document.addEventListener('click', (e) => {
     const addItemBtn = e.target.closest('[data-po-add-item]');
     if (addItemBtn) {
-        const tbody = document.querySelector('[data-po-items]');
-        if (tbody) {
-            tbody.appendChild(buildPoItemRow({}));
-            recalcPoTotals();
-        }
+        addPoRow();
         return;
     }
 
@@ -660,8 +594,17 @@ document.addEventListener('click', (e) => {
         if (row && tbody) {
             row.remove();
             if (tbody.querySelectorAll('[data-po-item-row]').length === 0) {
-                tbody.appendChild(buildPoItemRow({}));
+                // keep at least 1 row
+                const first = document.createElement('tr');
+                first.setAttribute('data-po-item-row', '');
+                const template = document.querySelector('[data-po-item-row]');
+                if (template) {
+                    tbody.appendChild(template.cloneNode(true));
+                } else {
+                    tbody.appendChild(first);
+                }
             }
+            reindexPoRows();
             recalcPoTotals();
         }
         return;
@@ -739,7 +682,6 @@ document.addEventListener('click', (e) => {
     const editItemBtn = e.target.closest('[data-action="edit-item"]');
     if (editItemBtn) {
         const id = editItemBtn.getAttribute('data-item-id');
-        const sku = editItemBtn.getAttribute('data-item-sku') || '';
         const itemType = editItemBtn.getAttribute('data-item-type') || '';
         const supplierId = editItemBtn.getAttribute('data-item-supplier-id') || '';
         const name = editItemBtn.getAttribute('data-item-name') || '';
@@ -755,7 +697,6 @@ document.addEventListener('click', (e) => {
             }
         }
 
-        const skuEl = document.querySelector('[data-edit-item-sku]');
         const itemTypeEl = document.querySelector('[data-edit-item-type]');
         const supplierEl = document.querySelector('[data-edit-item-supplier]');
         const nameEl = document.querySelector('[data-edit-item-name]');
@@ -763,7 +704,6 @@ document.addEventListener('click', (e) => {
         const priceEl = document.querySelector('[data-edit-item-price]');
         const activeEl = document.querySelector('[data-edit-item-active]');
 
-        if (skuEl) skuEl.value = sku;
         if (itemTypeEl) itemTypeEl.value = itemType;
         if (supplierEl) supplierEl.value = supplierId;
         if (nameEl) nameEl.value = name;
@@ -908,9 +848,16 @@ document.addEventListener('input', (e) => {
     }
 });
 
-hydrateInvoiceStorageFromDOMIfNeeded();
-renderInvoiceTable();
+document.addEventListener('change', (e) => {
+    const selectEl = e.target.closest('[data-po-item-id]');
+    if (!selectEl) return;
 
-hydratePoPageFromQuery();
+    const row = selectEl.closest('[data-po-item-row]');
+    const unitEl = row?.querySelector('[data-po-item-unit]');
+    const unit = selectEl.selectedOptions?.[0]?.dataset?.unit;
+    if (unitEl) unitEl.value = unit ? String(unit) : 'pcs';
+    recalcPoTotals();
+});
 
+hydratePoPageFromDom();
 updateDashboardKpis();

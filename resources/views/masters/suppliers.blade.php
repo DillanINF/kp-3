@@ -88,15 +88,17 @@
                                     <div class="mb-2 flex items-center justify-between gap-3">
                                         <div class="text-sm font-semibold text-slate-900">Barang Supplier</div>
                                         @if(auth()->user()?->role === 'admin')
-                                            <button
-                                                type="button"
-                                                data-open-modal="modal-tambah-item"
-                                                data-item-type="supplier"
-                                                data-supplier-id="{{ $supplier->id }}"
-                                                class="inline-flex h-9 items-center justify-center rounded-md bg-slate-900 px-3 text-xs font-semibold text-white hover:bg-slate-800"
-                                            >
-                                                Tambah Barang
-                                            </button>
+                                            <form action="{{ route('masters.suppliers.items.store', $supplier) }}" method="POST" class="flex flex-wrap items-center gap-2">
+                                                @csrf
+                                                <select name="item_id" class="h-9 rounded-md border border-slate-200 bg-white px-3 text-xs text-slate-700" required>
+                                                    <option value="" disabled selected>Pilih Barang</option>
+                                                    @foreach($items ?? [] as $masterItem)
+                                                        <option value="{{ $masterItem->id }}">{{ $masterItem->name }}</option>
+                                                    @endforeach
+                                                </select>
+                                                <input name="buy_price" type="number" min="0" step="1" value="0" placeholder="Harga beli default" class="h-9 w-36 rounded-md border border-slate-200 bg-white px-3 text-xs text-slate-700" />
+                                                <button type="submit" class="inline-flex h-9 items-center justify-center rounded-md bg-slate-900 px-3 text-xs font-semibold text-white hover:bg-slate-800">Link</button>
+                                            </form>
                                         @endif
                                     </div>
                                     @if(($supplier->supplierItems?->count() ?? 0) > 0)
@@ -106,46 +108,24 @@
                                                     <tr>
                                                         <th class="px-3 py-2">Nama Produk</th>
                                                         <th class="px-3 py-2">Satuan</th>
-                                                        <th class="px-3 py-2 text-right">Harga</th>
+                                                        <th class="px-3 py-2 text-right">Harga Beli Default</th>
                                                         @if(auth()->user()?->role === 'admin')
                                                             <th class="px-3 py-2 text-center">Aksi</th>
                                                         @endif
                                                     </tr>
                                                 </thead>
                                                 <tbody class="divide-y divide-slate-200">
-                                                    @foreach($supplier->supplierItems as $item)
+                                                    @foreach($supplier->supplierItems as $supplierItem)
                                                         <tr>
-                                                            <td class="px-3 py-2 font-medium text-slate-900">{{ $item->name }}</td>
-                                                            <td class="px-3 py-2 text-slate-700">{{ $item->unit }}</td>
-                                                            <td class="px-3 py-2 text-right text-slate-700">Rp {{ number_format($item->price ?? 0, 0, ',', '.') }}</td>
+                                                            <td class="px-3 py-2 font-medium text-slate-900">{{ $supplierItem->item?->name ?? '-' }}</td>
+                                                            <td class="px-3 py-2 text-slate-700">{{ $supplierItem->item?->unit ?? '-' }}</td>
+                                                            <td class="px-3 py-2 text-right text-slate-700">Rp {{ number_format($supplierItem->buy_price ?? 0, 0, ',', '.') }}</td>
                                                             @if(auth()->user()?->role === 'admin')
                                                                 <td class="px-3 py-2">
                                                                     <div class="flex items-center justify-center gap-2">
-                                                                        <button
-                                                                            type="button"
-                                                                            data-action="edit-item"
-                                                                            data-item-id="{{ $item->id }}"
-                                                                            data-item-supplier-id="{{ $item->supplier_id }}"
-                                                                            data-item-sku="{{ $item->sku }}"
-                                                                            data-item-type="supplier"
-                                                                            data-item-name="{{ $item->name }}"
-                                                                            data-item-unit="{{ $item->unit }}"
-                                                                            data-item-price="{{ $item->price }}"
-                                                                            data-item-active="{{ $item->is_active ? 1 : 0 }}"
-                                                                            class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                                                                            aria-label="Edit"
-                                                                        >
-                                                                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4">
-                                                                                <path d="M12 20H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                                                                                <path d="M16.5 3.5C17.3284 2.67157 18.6716 2.67157 19.5 3.5C20.3284 4.32843 20.3284 5.67157 19.5 6.5L8 18L3 19L4 14L16.5 3.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                                                                            </svg>
-                                                                        </button>
-
-                                                                        <form action="{{ route('masters.items.destroy', $item) }}" method="POST" onsubmit="return confirm('Hapus barang ini?')">
+                                                                        <form action="{{ route('masters.suppliers.items.destroy', [$supplier, $supplierItem]) }}" method="POST" onsubmit="return confirm('Hapus barang supplier ini?')">
                                                                             @csrf
                                                                             @method('DELETE')
-                                                                            <input name="redirect_route" type="hidden" value="masters.suppliers" />
-                                                                            <input name="open_supplier_id" type="hidden" value="{{ $supplier->id }}" />
                                                                             <button type="submit" class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100" aria-label="Hapus">×</button>
                                                                         </form>
                                                                     </div>

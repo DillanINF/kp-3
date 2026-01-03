@@ -27,7 +27,7 @@
                         <div class="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-500">
                             <span class="inline-flex items-center gap-1">
                                 <span class="font-medium text-slate-700">Total:</span>
-                                <span data-invoice-total-count>1</span>
+                                <span>{{ ($invoices ?? collect())->count() }}</span>
                             </span>
                             <span class="inline-flex items-center gap-1">
                                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4">
@@ -62,7 +62,7 @@
                     </div>
 
                     <div class="relative">
-                        <input data-invoice-search type="text" placeholder="Cari no invoice..." class="h-10 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3 text-sm text-slate-700 shadow-sm outline-none placeholder:text-slate-400 focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100 md:w-[260px]" />
+                        <input type="text" placeholder="Cari no invoice..." class="h-10 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3 text-sm text-slate-700 shadow-sm outline-none placeholder:text-slate-400 focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100 md:w-[260px]" />
                         <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
                             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4">
                                 <path d="M21 21L16.65 16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -97,7 +97,7 @@
                     </div>
                 </div>
 
-                <span data-invoice-count-badge class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">1 data</span>
+                <span class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">{{ ($invoices ?? collect())->count() }} data</span>
             </div>
 
             <div class="overflow-x-auto">
@@ -113,39 +113,30 @@
                             <th class="px-4 py-3 text-center">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-200" data-invoice-rows data-input-po-url="{{ route('invoices.input_po') }}">
-                        <tr class="cursor-pointer transition-colors hover:bg-indigo-50 active:bg-indigo-100" data-invoice-no="1">
-                            <td class="px-4 py-3 text-slate-700">23/12/2025</td>
-                            <td class="px-4 py-3">
-                                <span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-indigo-100 text-xs font-semibold text-indigo-700">1</span>
-                            </td>
-                            <td class="px-4 py-3 text-slate-700">Dillan Inf</td>
-                            <td class="px-4 py-3 text-slate-500">-</td>
-                            <td class="px-4 py-3 text-slate-500">-</td>
-                            <td class="px-4 py-3 text-slate-500">-</td>
-                            <td class="px-4 py-3">
-                                <div class="flex flex-col items-center justify-center gap-2">
-                                    <div class="flex items-center justify-center gap-2">
-                                        <button type="button" data-action="edit-invoice-row" class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 hover:bg-slate-50" aria-label="Edit">
-                                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4">
-                                                <path d="M12 20H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                                                <path d="M16.5 3.5C17.3284 2.67157 18.6716 2.67157 19.5 3.5C20.3284 4.32843 20.3284 5.67157 19.5 6.5L8 18L3 19L4 14L16.5 3.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                                            </svg>
-                                        </button>
-
-                                        <button type="button" data-action="delete-invoice-row" class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100" aria-label="Delete">
-                                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4">
-                                                <path d="M3 6H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                                                <path d="M8 6V4H16V6" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                                                <path d="M19 6L18 20H6L5 6" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                                                <path d="M10 11V17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                                                <path d="M14 11V17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
+                    <tbody class="divide-y divide-slate-200">
+                        @forelse($invoices ?? [] as $invoice)
+                            <tr class="transition-colors hover:bg-indigo-50">
+                                <td class="px-4 py-3 text-slate-700">{{ optional($invoice->date)->format('d/m/Y') }}</td>
+                                <td class="px-4 py-3">
+                                    <span class="inline-flex items-center justify-center rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-700">{{ $invoice->invoice_no }}</span>
+                                </td>
+                                <td class="px-4 py-3 text-slate-700">{{ $invoice->customer?->name ?? '-' }}</td>
+                                <td class="px-4 py-3 text-slate-500">{{ $invoice->po_no ?? '-' }}</td>
+                                <td class="px-4 py-3 text-slate-500">{{ $invoice->grand_total > 0 ? 'Rp ' . number_format($invoice->grand_total, 0, ',', '.') : '-' }}</td>
+                                <td class="px-4 py-3 text-slate-500">{{ $invoice->qty_total > 0 ? $invoice->qty_total : '-' }}</td>
+                                <td class="px-4 py-3 text-center">
+                                    @if(($invoice->status ?? '') === 'draft')
+                                        <a href="{{ route('invoices.input_po', $invoice) }}" class="inline-flex h-9 items-center justify-center rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white hover:bg-indigo-700">Input PO</a>
+                                    @else
+                                        <span class="inline-flex rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700">Selesai</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="7" class="px-4 py-6 text-center text-sm text-slate-500">Belum ada data invoice.</td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
@@ -159,22 +150,23 @@
                 <div class="mt-1 text-sm text-indigo-100">Customer wajib dipilih sebelum melanjutkan</div>
             </div>
 
-            <div class="space-y-4 px-6 py-6">
+            <form action="{{ route('invoices.store') }}" method="POST" class="space-y-4 px-6 py-6">
+                @csrf
                 <div class="space-y-2">
                     <label class="text-sm font-semibold text-slate-700">Customer</label>
-                    <select data-tambah-invoice-customer class="h-11 w-full rounded-xl border border-indigo-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
+                    <select name="customer_id" class="h-11 w-full rounded-xl border border-indigo-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
                         <option value="">-- Pilih Customer --</option>
                         @foreach($customers ?? [] as $customer)
-                            <option value="{{ $customer->id }}" data-name="{{ $customer->name }}">{{ $customer->name }}</option>
+                            <option value="{{ $customer->id }}">{{ $customer->name }}</option>
                         @endforeach
                     </select>
                 </div>
 
                 <div class="flex items-center justify-end gap-2 pt-2">
                     <button type="button" data-close-modal="modal-tambah-invoice" class="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">Batal</button>
-                    <button id="btn-tambah-invoice-lanjut" type="button" class="inline-flex h-10 items-center justify-center rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white hover:bg-indigo-700">Lanjut</button>
+                    <button type="submit" class="inline-flex h-10 items-center justify-center rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white hover:bg-indigo-700">Lanjut</button>
                 </div>
-            </div>
+            </form>
         </div>
     </div>
 

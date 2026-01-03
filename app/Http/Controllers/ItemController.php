@@ -44,7 +44,6 @@ class ItemController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'sku' => ['nullable', 'string', 'max:255', 'unique:items,sku'],
             'item_type' => ['required', 'string', 'in:supplier,regular'],
             'supplier_id' => ['nullable', 'integer', 'exists:suppliers,id'],
             'name' => ['required', 'string', 'max:255'],
@@ -52,25 +51,11 @@ class ItemController extends Controller
             'price' => ['nullable', 'integer', 'min:0'],
         ]);
 
-        $sku = isset($validated['sku']) ? trim((string) $validated['sku']) : '';
-        if ($sku === '') {
-            $base = strtoupper(preg_replace('/[^A-Z0-9]+/i', '-', (string) $validated['name']));
-            $base = trim($base, '-') ?: 'ITEM';
-            $base = substr($base, 0, 20);
-
-            do {
-                $candidate = $base . '-' . random_int(1000, 9999);
-            } while (Item::query()->where('sku', $candidate)->exists());
-
-            $sku = $candidate;
-        }
-
         if ($validated['item_type'] === 'supplier' && empty($validated['supplier_id'])) {
             return back()->withErrors(['supplier_id' => 'Supplier wajib dipilih untuk barang supplier.'])->withInput();
         }
 
         Item::query()->create([
-            'sku' => $sku,
             'item_type' => $validated['item_type'],
             'supplier_id' => $validated['item_type'] === 'supplier' ? $validated['supplier_id'] : null,
             'name' => $validated['name'],
@@ -103,7 +88,6 @@ class ItemController extends Controller
     public function update(Request $request, Item $item)
     {
         $validated = $request->validate([
-            'sku' => ['required', 'string', 'max:255', 'unique:items,sku,' . $item->id],
             'item_type' => ['required', 'string', 'in:supplier,regular'],
             'supplier_id' => ['nullable', 'integer', 'exists:suppliers,id'],
             'name' => ['required', 'string', 'max:255'],
@@ -115,7 +99,6 @@ class ItemController extends Controller
             return back()->withErrors(['supplier_id' => 'Supplier wajib dipilih untuk barang supplier.'])->withInput();
         }
 
-        $item->sku = $validated['sku'];
         $item->item_type = $validated['item_type'];
         $item->supplier_id = $validated['item_type'] === 'supplier' ? $validated['supplier_id'] : null;
         $item->name = $validated['name'];

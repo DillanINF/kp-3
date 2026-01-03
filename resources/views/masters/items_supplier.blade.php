@@ -52,12 +52,12 @@
                             <td class="px-4 py-3 text-slate-700">Rp {{ number_format($req->total_amount ?? 0, 0, ',', '.') }}</td>
                             <td class="px-4 py-3">
                                 @if(auth()->user()?->role === 'admin' && $req->status !== 'accepted')
-                                    <form action="{{ route('masters.items_supplier.accept', ['supplierRequest' => $req->id]) }}" method="POST" onsubmit="return confirm('Ubah status menjadi ACCEPT?')">
+                                    <form action="{{ route('masters.items_supplier.accept', ['supplierRequest' => $req->id]) }}" method="POST" onsubmit="return confirm('Terima barang dari supplier? Stok akan bertambah dan tercatat di Barang Masuk.')">
                                         @csrf
-                                        <button type="submit" class="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800 hover:bg-amber-200">PENDING</button>
+                                        <button type="submit" class="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800 hover:bg-amber-200">TERIMA BARANG</button>
                                     </form>
                                 @else
-                                    <span class="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-800">ACCEPT</span>
+                                    <span class="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-800">DITERIMA</span>
                                 @endif
                             </td>
                             <td class="px-4 py-3">
@@ -261,12 +261,12 @@
                 tr.setAttribute('data-request-item-row', '1');
                 tr.innerHTML = `
                     <td class="px-4 py-3">
-                        <select name="items[${index}][product_name]" data-request-product class="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none" required>
+                        <select name="items[${index}][item_id]" data-request-product class="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none" required>
                             <option value="" disabled selected>Pilih Produk</option>
                             ${products
                                 .map(
                                     (p) =>
-                                        `<option value="${String(p.name).replaceAll('"', '&quot;')}" data-unit="${String(p.unit).replaceAll('"', '&quot;')}" data-price="${String(p.price)}">${String(p.name)}</option>`,
+                                        `<option value="${String(p.id)}" data-unit="${String(p.unit ?? '').replaceAll('"', '&quot;')}" data-price="${String(p.price)}">${String(p.name)}</option>`,
                                 )
                                 .join('')}
                         </select>
@@ -302,12 +302,12 @@
                 tr.setAttribute('data-request-item-row', '1');
                 tr.innerHTML = `
                     <td class="px-4 py-3">
-                        <select name="items[${index}][product_name]" data-request-product class="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none" required>
+                        <select name="items[${index}][item_id]" data-request-product class="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none" required>
                             <option value="" disabled selected>Pilih Produk</option>
                             ${products
                                 .map(
                                     (p) =>
-                                        `<option value="${String(p.name).replaceAll('"', '&quot;')}" data-unit="${String(p.unit).replaceAll('"', '&quot;')}" data-price="${String(p.price)}">${String(p.name)}</option>`,
+                                        `<option value="${String(p.id)}" data-unit="${String(p.unit ?? '').replaceAll('"', '&quot;')}" data-price="${String(p.price)}">${String(p.name)}</option>`,
                                 )
                                 .join('')}
                         </select>
@@ -351,14 +351,14 @@
                 if (!itemsEl) return;
                 itemsEl.innerHTML = '';
 
-                const list = Array.isArray(items) && items.length ? items : [{ product_name: '', unit: '', qty: 1, price: 0 }];
+                const list = Array.isArray(items) && items.length ? items : [{ item_id: '', unit: '', qty: 1, price: 0 }];
                 list.forEach((it, idx) => {
                     const row = createEditRequestRow(idx);
                     itemsEl.appendChild(row);
 
                     const sel = row.querySelector('[data-request-product]');
-                    if (sel && it?.product_name) {
-                        sel.value = String(it.product_name);
+                    if (sel && it?.item_id) {
+                        sel.value = String(it.item_id);
                     }
                     applySelectedProductToRowEdit(row);
 

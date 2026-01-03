@@ -13,6 +13,7 @@ class Customer extends Model
         'name',
         'email',
         'phone',
+        'address',
         'is_active',
     ];
 

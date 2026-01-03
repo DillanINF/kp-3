@@ -17,7 +17,6 @@
             <table class="w-full text-left text-sm">
                 <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-600">
                     <tr>
-                        <th class="px-4 py-3">SKU</th>
                         <th class="px-4 py-3">Nama</th>
                         <th class="px-4 py-3">Satuan</th>
                         <th class="px-4 py-3">Stok</th>
@@ -30,7 +29,6 @@
                 <tbody class="divide-y divide-slate-200">
                     @forelse($regularItems as $item)
                         <tr>
-                            <td class="px-4 py-3 font-medium text-slate-900">{{ $item->sku }}</td>
                             <td class="px-4 py-3 text-slate-700">{{ $item->name }}</td>
                             <td class="px-4 py-3 text-slate-700">{{ $item->unit }}</td>
                             <td class="px-4 py-3 text-slate-700">{{ $item->stock }}</td>
@@ -42,7 +40,6 @@
                                             type="button"
                                             data-action="edit-item"
                                             data-item-id="{{ $item->id }}"
-                                            data-item-sku="{{ $item->sku }}"
                                             data-item-type="regular"
                                             data-item-name="{{ $item->name }}"
                                             data-item-unit="{{ $item->unit }}"
@@ -68,7 +65,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="{{ auth()->user()?->role === 'admin' ? 6 : 5 }}" class="px-4 py-6 text-center text-sm text-slate-500">Belum ada data barang biasa.</td>
+                            <td colspan="{{ auth()->user()?->role === 'admin' ? 5 : 4 }}" class="px-4 py-6 text-center text-sm text-slate-500">Belum ada data barang biasa.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -88,11 +85,6 @@
                     @csrf
 
                     <input data-add-item-type name="item_type" type="hidden" value="regular" />
-
-                    <div class="space-y-2">
-                        <label class="text-sm font-semibold text-slate-700">SKU</label>
-                        <input name="sku" value="{{ old('sku') }}" type="text" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100" required />
-                    </div>
 
                     <div class="space-y-2">
                         <label class="text-sm font-semibold text-slate-700">Nama</label>
@@ -136,11 +128,6 @@
                     @method('PUT')
 
                     <input data-edit-item-type name="item_type" type="hidden" value="regular" />
-
-                    <div class="space-y-2">
-                        <label class="text-sm font-semibold text-slate-700">SKU</label>
-                        <input data-edit-item-sku name="sku" type="text" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100" required />
-                    </div>
 
                     <div class="space-y-2">
                         <label class="text-sm font-semibold text-slate-700">Nama</label>

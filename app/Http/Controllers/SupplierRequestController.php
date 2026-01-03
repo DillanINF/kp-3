@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Item;
+use App\Models\ItemIn;
 use App\Models\Supplier;
+use App\Models\SupplierItem;
 use App\Models\SupplierRequest;
 use App\Models\SupplierRequestItem;
 use App\Mail\SupplierRequestSent;
@@ -15,7 +18,7 @@ class SupplierRequestController extends Controller
     public function index(Request $request)
     {
         $suppliers = Supplier::query()
-            ->with(['supplierItems' => fn ($q) => $q->select(['id', 'supplier_id', 'name', 'unit', 'price'])->orderBy('name')])
+            ->with(['supplierItems' => fn ($q) => $q->with('item')->orderBy('id')])
             ->orderBy('name')
             ->get();
 
@@ -24,9 +27,10 @@ class SupplierRequestController extends Controller
                 return [
                     (string) $supplier->id => ($supplier->supplierItems ?? collect())
                         ->map(fn ($it) => [
-                            'name' => $it->name,
-                            'unit' => $it->unit,
-                            'price' => (int) ($it->price ?? 0),
+                            'id' => (int) $it->item_id,
+                            'name' => $it->item?->name,
+                            'unit' => $it->item?->unit,
+                            'price' => (int) ($it->buy_price ?? 0),
                         ])
                         ->values()
                         ->all(),
@@ -36,7 +40,7 @@ class SupplierRequestController extends Controller
         $selectedSupplierId = $request->query('supplier_id');
 
         $requestsQuery = SupplierRequest::query()
-            ->with(['supplier', 'items'])
+            ->with(['supplier', 'items' => fn ($q) => $q->with('item')])
             ->orderByDesc('request_date')
             ->orderByDesc('id');
 
@@ -50,7 +54,7 @@ class SupplierRequestController extends Controller
             $req->items_json = json_encode(
                 ($req->items ?? collect())
                     ->map(fn ($it) => [
-                        'product_name' => $it->product_name,
+                        'item_id' => (int) $it->item_id,
                         'unit' => $it->unit,
                         'qty' => (int) $it->qty,
                         'price' => (int) ($it->price ?? 0),
@@ -82,13 +86,12 @@ class SupplierRequestController extends Controller
             'supplier_id' => ['required', 'integer', 'exists:suppliers,id'],
             'notes' => ['nullable', 'string'],
             'items' => ['required', 'array', 'min:1'],
-            'items.*.product_name' => ['required', 'string', 'max:255'],
-            'items.*.unit' => ['required', 'string', 'max:30'],
+            'items.*.item_id' => ['required', 'integer', 'exists:items,id'],
             'items.*.qty' => ['required', 'integer', 'min:1'],
             'items.*.price' => ['nullable', 'integer', 'min:0'],
         ]);
 
-        DB::transaction(function () use ($validated, $request) {
+        DB::transaction(function () use ($validated) {
             $items = $validated['items'];
 
             $totalQty = 0;
@@ -100,6 +103,16 @@ class SupplierRequestController extends Controller
                 $subtotal = $qty * $price;
                 $totalQty += $qty;
                 $totalAmount += $subtotal;
+            }
+
+            foreach ($items as $it) {
+                $exists = SupplierItem::query()
+                    ->where('supplier_id', $validated['supplier_id'])
+                    ->where('item_id', $it['item_id'])
+                    ->exists();
+                if (!$exists) {
+                    abort(422, 'Barang yang dipilih tidak terdaftar pada supplier.');
+                }
             }
 
             $req = SupplierRequest::query()->create([
@@ -114,13 +127,14 @@ class SupplierRequestController extends Controller
             ]);
 
             foreach ($items as $it) {
+                $item = Item::query()->findOrFail($it['item_id']);
                 $qty = (int) ($it['qty'] ?? 0);
                 $price = (int) ($it['price'] ?? 0);
 
                 SupplierRequestItem::query()->create([
                     'supplier_request_id' => $req->id,
-                    'product_name' => (string) $it['product_name'],
-                    'unit' => (string) $it['unit'],
+                    'item_id' => (int) $it['item_id'],
+                    'unit' => (string) ($item->unit ?? 'pcs'),
                     'qty' => $qty,
                     'price' => $price,
                     'subtotal' => $qty * $price,
@@ -137,8 +151,7 @@ class SupplierRequestController extends Controller
             'supplier_id' => ['required', 'integer', 'exists:suppliers,id'],
             'notes' => ['nullable', 'string'],
             'items' => ['required', 'array', 'min:1'],
-            'items.*.product_name' => ['required', 'string', 'max:255'],
-            'items.*.unit' => ['required', 'string', 'max:30'],
+            'items.*.item_id' => ['required', 'integer', 'exists:items,id'],
             'items.*.qty' => ['required', 'integer', 'min:1'],
             'items.*.price' => ['nullable', 'integer', 'min:0'],
         ]);
@@ -157,6 +170,16 @@ class SupplierRequestController extends Controller
                 $totalAmount += $subtotal;
             }
 
+            foreach ($items as $it) {
+                $exists = SupplierItem::query()
+                    ->where('supplier_id', $validated['supplier_id'])
+                    ->where('item_id', $it['item_id'])
+                    ->exists();
+                if (!$exists) {
+                    abort(422, 'Barang yang dipilih tidak terdaftar pada supplier.');
+                }
+            }
+
             $supplierRequest->supplier_id = $validated['supplier_id'];
             $supplierRequest->notes = $validated['notes'] ?? null;
             $supplierRequest->total_qty = $totalQty;
@@ -166,13 +189,14 @@ class SupplierRequestController extends Controller
             $supplierRequest->items()->delete();
 
             foreach ($items as $it) {
+                $item = Item::query()->findOrFail($it['item_id']);
                 $qty = (int) ($it['qty'] ?? 0);
                 $price = (int) ($it['price'] ?? 0);
 
                 SupplierRequestItem::query()->create([
                     'supplier_request_id' => $supplierRequest->id,
-                    'product_name' => (string) $it['product_name'],
-                    'unit' => (string) $it['unit'],
+                    'item_id' => (int) $it['item_id'],
+                    'unit' => (string) ($item->unit ?? 'pcs'),
                     'qty' => $qty,
                     'price' => $price,
                     'subtotal' => $qty * $price,
@@ -185,7 +209,7 @@ class SupplierRequestController extends Controller
 
     public function send(SupplierRequest $supplierRequest)
     {
-        $supplierRequest->loadMissing(['supplier', 'items']);
+        $supplierRequest->loadMissing(['supplier', 'items' => fn ($q) => $q->with('item')]);
 
         $email = $supplierRequest->supplier?->email;
         if ($email) {
@@ -197,10 +221,30 @@ class SupplierRequestController extends Controller
 
     public function accept(SupplierRequest $supplierRequest)
     {
-        if ($supplierRequest->status !== 'accepted') {
+        if ($supplierRequest->status === 'accepted') {
+            return redirect()->route('masters.items_supplier', ['supplier_id' => $supplierRequest->supplier_id]);
+        }
+
+        DB::transaction(function () use ($supplierRequest) {
+            $supplierRequest->loadMissing(['items']);
+
             $supplierRequest->status = 'accepted';
             $supplierRequest->save();
-        }
+
+            foreach ($supplierRequest->items as $it) {
+                $qty = (int) ($it->qty ?? 0);
+                if ($qty <= 0) continue;
+
+                ItemIn::query()->create([
+                    'supplier_id' => $supplierRequest->supplier_id,
+                    'item_id' => (int) $it->item_id,
+                    'qty' => $qty,
+                    'date' => now()->toDateString(),
+                ]);
+
+                Item::query()->whereKey((int) $it->item_id)->increment('stock', $qty);
+            }
+        });
 
         return redirect()->route('masters.items_supplier', ['supplier_id' => $supplierRequest->supplier_id]);
     }

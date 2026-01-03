@@ -31,7 +31,10 @@ Route::middleware('auth')->group(function () {
     Route::prefix('invoices')->name('invoices.')->group(function () {
         Route::get('/', [InvoiceController::class, 'index'])->name('index');
 
-        Route::get('/input-po', [InvoiceController::class, 'inputPo'])->name('input_po');
+        Route::post('/', [InvoiceController::class, 'store'])->name('store');
+
+        Route::get('/{invoice}/input-po', [InvoiceController::class, 'inputPo'])->name('input_po');
+        Route::post('/{invoice}/input-po', [InvoiceController::class, 'storePo'])->name('input_po.store');
 
         Route::get('/po-belum-terkirim', function () {
             return view('invoices.po_pending');
@@ -48,6 +51,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/suppliers', [SupplierController::class, 'store'])->middleware('role:admin')->name('suppliers.store');
         Route::put('/suppliers/{supplier}', [SupplierController::class, 'update'])->middleware('role:admin')->name('suppliers.update');
         Route::delete('/suppliers/{supplier}', [SupplierController::class, 'destroy'])->middleware('role:admin')->name('suppliers.destroy');
+
+        Route::post('/suppliers/{supplier}/items', [SupplierController::class, 'storeItem'])->middleware('role:admin')->name('suppliers.items.store');
+        Route::delete('/suppliers/{supplier}/items/{supplierItem}', [SupplierController::class, 'destroyItem'])->middleware('role:admin')->name('suppliers.items.destroy');
 
         Route::get('/items', [ItemController::class, 'index'])->name('items');
         Route::get('/items-supplier', [SupplierRequestController::class, 'index'])->name('items_supplier');

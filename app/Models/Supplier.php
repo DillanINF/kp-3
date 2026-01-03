@@ -14,6 +14,7 @@ class Supplier extends Model
         'name',
         'contact_name',
         'phone',
+        'email',
         'address',
         'is_active',
     ];
@@ -24,6 +25,6 @@ class Supplier extends Model
 
     public function supplierItems(): HasMany
     {
-        return $this->hasMany(\App\Models\Item::class)->where('item_type', 'supplier');
+        return $this->hasMany(\App\Models\SupplierItem::class);
     }
 }

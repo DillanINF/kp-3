@@ -13,7 +13,6 @@ return new class extends Migration
     {
         Schema::create('items', function (Blueprint $table) {
             $table->id();
-            $table->string('sku')->unique();
             $table->string('item_type', 20)->default('regular')->index();
             $table->foreignId('supplier_id')->nullable()->constrained('suppliers')->nullOnDelete();
             $table->string('name');

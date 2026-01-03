@@ -6,28 +6,27 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class SupplierRequestItem extends Model
+class InvoiceDetail extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'supplier_request_id',
+        'invoice_id',
         'item_id',
-        'unit',
         'qty',
         'price',
-        'subtotal',
+        'total',
     ];
 
     protected $casts = [
         'qty' => 'integer',
         'price' => 'integer',
-        'subtotal' => 'integer',
+        'total' => 'integer',
     ];
 
-    public function supplierRequest(): BelongsTo
+    public function invoice(): BelongsTo
     {
-        return $this->belongsTo(SupplierRequest::class);
+        return $this->belongsTo(Invoice::class);
     }
 
     public function item(): BelongsTo

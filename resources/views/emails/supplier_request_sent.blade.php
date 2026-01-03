@@ -23,7 +23,7 @@
         <tbody>
             @foreach($request->items as $it)
                 <tr>
-                    <td style="border: 1px solid #e2e8f0; padding: 8px;">{{ $it->product_name }}</td>
+                    <td style="border: 1px solid #e2e8f0; padding: 8px;">{{ $it->item?->name ?? '-' }}</td>
                     <td style="border: 1px solid #e2e8f0; padding: 8px;">{{ $it->unit }}</td>
                     <td style="border: 1px solid #e2e8f0; padding: 8px;">{{ $it->qty }}</td>
                     <td style="border: 1px solid #e2e8f0; padding: 8px; text-align: right;">Rp {{ number_format($it->price ?? 0, 0, ',', '.') }}</td>
