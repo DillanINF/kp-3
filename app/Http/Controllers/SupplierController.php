@@ -6,6 +6,7 @@ use App\Models\Item;
 use App\Models\Supplier;
 use App\Models\SupplierItem;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class SupplierController extends Controller
 {
@@ -45,6 +46,40 @@ class SupplierController extends Controller
         return redirect()->route('masters.suppliers', ['open_supplier_id' => $supplier->id]);
     }
 
+    public function storeNewItem(Request $request, Supplier $supplier)
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'unit' => ['required', 'string', 'in:pcs,qty'],
+            'buy_price' => ['nullable', 'integer', 'min:0'],
+        ]);
+
+        DB::transaction(function () use ($supplier, $validated) {
+            $item = Item::query()->create([
+                'item_type' => 'regular',
+                'supplier_id' => null,
+                'name' => $validated['name'],
+                'unit' => $validated['unit'],
+                'price' => 0,
+                'stock' => 0,
+                'is_active' => true,
+            ]);
+
+            SupplierItem::query()->updateOrCreate(
+                [
+                    'supplier_id' => $supplier->id,
+                    'item_id' => $item->id,
+                ],
+                [
+                    'buy_price' => $validated['buy_price'] ?? 0,
+                    'is_active' => true,
+                ]
+            );
+        });
+
+        return redirect()->route('masters.suppliers', ['open_supplier_id' => $supplier->id]);
+    }
+
     public function destroyItem(Supplier $supplier, SupplierItem $supplierItem)
     {
         if ((int) $supplierItem->supplier_id !== (int) $supplier->id) {
@@ -52,6 +87,33 @@ class SupplierController extends Controller
         }
 
         $supplierItem->delete();
+
+        return redirect()->route('masters.suppliers', ['open_supplier_id' => $supplier->id]);
+    }
+
+    public function updateItem(Request $request, Supplier $supplier, SupplierItem $supplierItem)
+    {
+        if ((int) $supplierItem->supplier_id !== (int) $supplier->id) {
+            abort(404);
+        }
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'unit' => ['required', 'string', 'max:30'],
+            'buy_price' => ['nullable', 'integer', 'min:0'],
+        ]);
+
+        DB::transaction(function () use ($supplierItem, $validated) {
+            Item::query()
+                ->whereKey((int) $supplierItem->item_id)
+                ->update([
+                    'name' => $validated['name'],
+                    'unit' => $validated['unit'],
+                ]);
+
+            $supplierItem->buy_price = $validated['buy_price'] ?? 0;
+            $supplierItem->save();
+        });
 
         return redirect()->route('masters.suppliers', ['open_supplier_id' => $supplier->id]);
     }

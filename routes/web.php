@@ -33,6 +33,10 @@ Route::middleware('auth')->group(function () {
 
         Route::post('/', [InvoiceController::class, 'store'])->name('store');
 
+        Route::delete('/{invoice}', [InvoiceController::class, 'destroy'])->name('destroy');
+
+        Route::get('/by-no/{invoiceNo}/input-po', [InvoiceController::class, 'inputPoByNo'])->name('input_po_by_no');
+
         Route::get('/{invoice}/input-po', [InvoiceController::class, 'inputPo'])->name('input_po');
         Route::post('/{invoice}/input-po', [InvoiceController::class, 'storePo'])->name('input_po.store');
 
@@ -53,6 +57,8 @@ Route::middleware('auth')->group(function () {
         Route::delete('/suppliers/{supplier}', [SupplierController::class, 'destroy'])->middleware('role:admin')->name('suppliers.destroy');
 
         Route::post('/suppliers/{supplier}/items', [SupplierController::class, 'storeItem'])->middleware('role:admin')->name('suppliers.items.store');
+        Route::post('/suppliers/{supplier}/items/new', [SupplierController::class, 'storeNewItem'])->middleware('role:admin')->name('suppliers.items.store_new');
+        Route::put('/suppliers/{supplier}/items/{supplierItem}', [SupplierController::class, 'updateItem'])->middleware('role:admin')->name('suppliers.items.update');
         Route::delete('/suppliers/{supplier}/items/{supplierItem}', [SupplierController::class, 'destroyItem'])->middleware('role:admin')->name('suppliers.items.destroy');
 
         Route::get('/items', [ItemController::class, 'index'])->name('items');

@@ -8,9 +8,6 @@
     <div class="rounded-xl border border-slate-200 bg-white">
         <div class="flex items-center justify-between border-b border-slate-200 p-4">
             <div class="text-sm font-semibold text-slate-900">Barang Biasa</div>
-            @if(auth()->user()?->role === 'admin')
-                <button type="button" data-open-modal="modal-tambah-item" data-item-type="regular" class="inline-flex items-center gap-2 rounded-md bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-800">Tambah</button>
-            @endif
         </div>
 
         <div class="overflow-x-auto">
@@ -74,48 +71,6 @@
     </div>
 
     @if(auth()->user()?->role === 'admin')
-        <div id="modal-tambah-item" data-modal class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 p-4">
-            <div class="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-xl">
-                <div class="bg-slate-900 px-6 py-5">
-                    <div class="text-lg font-semibold text-white">Tambah Barang</div>
-                    <div class="mt-1 text-sm text-slate-200">Isi master data barang.</div>
-                </div>
-
-                <form action="{{ route('masters.items.store') }}" method="POST" class="space-y-4 px-6 py-6">
-                    @csrf
-
-                    <input data-add-item-type name="item_type" type="hidden" value="regular" />
-
-                    <div class="space-y-2">
-                        <label class="text-sm font-semibold text-slate-700">Nama</label>
-                        <input name="name" value="{{ old('name') }}" type="text" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100" required />
-                    </div>
-
-                    <div class="space-y-2">
-                        <label class="text-sm font-semibold text-slate-700">Satuan</label>
-                        <input name="unit" value="{{ old('unit', 'pcs') }}" type="text" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100" required />
-                    </div>
-
-                    <div class="space-y-2">
-                        <label class="text-sm font-semibold text-slate-700">Harga</label>
-                        <input name="price" value="{{ old('price', 0) }}" type="number" min="0" step="1" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100" />
-                    </div>
-
-                    <div class="flex items-center justify-between pt-2">
-                        <label class="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
-                            <input name="is_active" type="checkbox" value="1" class="h-4 w-4 rounded border-slate-300" checked />
-                            Aktif
-                        </label>
-
-                        <div class="flex items-center gap-2">
-                            <button type="button" data-close-modal="modal-tambah-item" class="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">Batal</button>
-                            <button type="submit" class="inline-flex h-10 items-center justify-center rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-800">Simpan</button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-
         <div id="modal-edit-item" data-modal class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 p-4">
             <div class="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-xl">
                 <div class="bg-slate-900 px-6 py-5">

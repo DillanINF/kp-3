@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Customer;
 use App\Models\Item;
 use App\Models\ItemOut;
+use App\Models\SupplierItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -26,11 +27,16 @@ class ItemOutController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'customer_id' => ['required', 'integer', 'exists:customers,id'],
+            'type' => ['required', 'string', 'in:sale,damaged,expired'],
+            'customer_id' => ['nullable', 'integer', 'exists:customers,id'],
             'item_id' => ['required', 'integer', 'exists:items,id'],
             'qty' => ['required', 'integer', 'min:1'],
             'date' => ['required', 'date'],
         ]);
+
+        if ($validated['type'] === 'sale' && empty($validated['customer_id'])) {
+            return back()->withErrors(['customer_id' => 'Customer wajib dipilih untuk tipe penjualan.'])->withInput();
+        }
 
         DB::transaction(function () use ($validated) {
             $item = Item::query()->lockForUpdate()->findOrFail($validated['item_id']);
@@ -39,7 +45,23 @@ class ItemOutController extends Controller
                 abort(422, 'Stok tidak mencukupi.');
             }
 
-            ItemOut::query()->create($validated);
+            $buyPrice = (int) (SupplierItem::query()
+                ->where('item_id', $item->id)
+                ->orderBy('buy_price')
+                ->value('buy_price') ?? 0);
+
+            $sellPrice = $validated['type'] === 'sale' ? (int) ($item->price ?? 0) : 0;
+
+            ItemOut::query()->create([
+                'type' => $validated['type'],
+                'customer_id' => $validated['type'] === 'sale' ? $validated['customer_id'] : null,
+                'item_id' => $item->id,
+                'qty' => $qty,
+                'date' => $validated['date'],
+                'buy_price' => $buyPrice,
+                'sell_price' => $sellPrice,
+            ]);
+
             $item->decrement('stock', $qty);
         });
 

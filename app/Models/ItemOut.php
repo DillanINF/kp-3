@@ -15,12 +15,17 @@ class ItemOut extends Model
     protected $fillable = [
         'customer_id',
         'item_id',
+        'type',
+        'buy_price',
+        'sell_price',
         'qty',
         'date',
     ];
 
     protected $casts = [
         'qty' => 'integer',
+        'buy_price' => 'integer',
+        'sell_price' => 'integer',
         'date' => 'date',
     ];
 

@@ -57,11 +57,22 @@ class InvoiceController extends Controller
         ]);
     }
 
+    public function inputPoByNo(string $invoiceNo)
+    {
+        $invoice = Invoice::query()->where('invoice_no', $invoiceNo)->firstOrFail();
+        $invoice->load(['customer', 'details.item']);
+        $items = Item::query()->where('item_type', 'regular')->orderBy('name')->get();
+
+        return view('invoices.input_po', [
+            'invoice' => $invoice,
+            'items' => $items,
+        ]);
+    }
+
     public function storePo(Request $request, Invoice $invoice)
     {
         $validated = $request->validate([
             'po_no' => ['nullable', 'string', 'max:255'],
-            'address' => ['nullable', 'string', 'max:255'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.item_id' => ['required', 'integer', 'exists:items,id'],
             'items.*.qty' => ['required', 'integer', 'min:1'],
@@ -117,11 +128,25 @@ class InvoiceController extends Controller
             }
 
             $invoice->po_no = $validated['po_no'] ?? null;
-            $invoice->address = $validated['address'] ?? null;
             $invoice->grand_total = $grandTotal;
             $invoice->qty_total = $qtyTotal;
             $invoice->status = 'posted';
             $invoice->save();
+        });
+
+        return redirect()->route('invoices.index');
+    }
+
+    public function destroy(Invoice $invoice)
+    {
+        DB::transaction(function () use ($invoice) {
+            $invoice->refresh();
+            if (($invoice->status ?? '') !== 'draft') {
+                abort(422, 'Invoice yang sudah diproses tidak bisa dihapus.');
+            }
+
+            InvoiceDetail::query()->where('invoice_id', $invoice->id)->delete();
+            $invoice->delete();
         });
 
         return redirect()->route('invoices.index');

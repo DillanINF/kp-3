@@ -32,16 +32,9 @@
                     <label class="text-sm font-semibold text-slate-700">No PO</label>
                     <input name="po_no" value="{{ old('po_no', $invoice->po_no) }}" type="text" placeholder="po.32545" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" />
                 </div>
-
-                <div class="space-y-2 lg:col-span-2">
-                    <label class="text-sm font-semibold text-slate-700">Alamat</label>
-                    <input name="address" value="{{ old('address', $invoice->address) }}" type="text" placeholder="JLN. DAYAT" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" />
-                </div>
             </div>
-        </div>
 
-        <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div class="flex flex-col gap-3 border-b border-slate-200 p-5 md:flex-row md:items-center md:justify-between">
+            <div class="flex flex-col gap-3 border-t border-slate-200 p-5 md:flex-row md:items-center md:justify-between">
                 <div class="min-w-0">
                     <div class="text-sm font-semibold text-slate-900">Produk Items</div>
                     <div class="mt-0.5 text-xs text-slate-500">Tambah produk, qty, dan harga untuk menghitung total.</div>
@@ -77,12 +70,42 @@
                         @foreach($existingDetails as $i => $row)
                             <tr data-po-item-row>
                                 <td class="px-4 py-3">
-                                    <select data-po-item-id name="items[{{ $i }}][item_id]" class="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
+                                    <select data-po-item-id name="items[{{ $i }}][item_id]" class="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" onchange="updatePrice(this)">
                                         <option value="">-- Pilih Produk --</option>
                                         @foreach($items ?? [] as $item)
-                                            <option value="{{ $item->id }}" data-unit="{{ $item->unit }}" {{ (string) ($row['item_id'] ?? '') === (string) $item->id ? 'selected' : '' }}>{{ $item->name }}</option>
+                                            <option 
+                                                value="{{ $item->id }}" 
+                                                data-unit="{{ $item->unit }}" 
+                                                data-price="{{ $item->price }}"
+                                                {{ (string) ($row['item_id'] ?? '') === (string) $item->id ? 'selected' : '' }}>
+                                                {{ $item->name }}
+                                            </option>
                                         @endforeach
                                     </select>
+                                    <script>
+                                        function updatePrice(select) {
+                                            const row = select.closest('tr');
+                                            if (!row) return;
+                                            
+                                            const selectedOption = select.options[select.selectedIndex];
+                                            const priceInput = row.querySelector('[data-po-item-price]');
+                                            
+                                            if (selectedOption && selectedOption.dataset.price) {
+                                                priceInput.value = selectedOption.dataset.price;
+                                                // Trigger input event to update total
+                                                priceInput.dispatchEvent(new Event('input', { bubbles: true }));
+                                            }
+                                        }
+                                        
+                                        // Initialize prices for pre-selected items on page load
+                                        document.addEventListener('DOMContentLoaded', function() {
+                                            document.querySelectorAll('[data-po-item-id]').forEach(select => {
+                                                if (select.value) {
+                                                    updatePrice(select);
+                                                }
+                                            });
+                                        });
+                                    </script>
                                 </td>
                                 <td class="px-4 py-3">
                                     <div class="grid grid-cols-[1fr_84px] gap-2">
@@ -103,13 +126,6 @@
                         @endforeach
                     </tbody>
                 </table>
-            </div>
-
-            <div class="flex items-center justify-end gap-2 border-t border-slate-200 p-5">
-                <div class="inline-flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                    <div class="text-sm font-semibold text-slate-700">Grand Total</div>
-                    <input data-po-grand-total type="text" disabled value="0" class="h-10 w-[200px] rounded-xl border border-slate-200 bg-white px-3 text-right text-sm font-semibold text-slate-900 outline-none" />
-                </div>
             </div>
         </div>
     </form>

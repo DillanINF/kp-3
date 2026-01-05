@@ -21,7 +21,6 @@
                         <th class="px-4 py-3">Email</th>
                         <th class="px-4 py-3">Telepon</th>
                         <th class="px-4 py-3">Alamat</th>
-                        <th class="px-4 py-3">Status</th>
                         @if(auth()->user()?->role === 'admin')
                             <th class="px-4 py-3 text-center">Aksi</th>
                         @endif
@@ -34,13 +33,6 @@
                             <td class="px-4 py-3 text-slate-700">{{ $customer->email ?? '-' }}</td>
                             <td class="px-4 py-3 text-slate-700">{{ $customer->phone ?? '-' }}</td>
                             <td class="px-4 py-3 text-slate-700">{{ $customer->address ?? '-' }}</td>
-                            <td class="px-4 py-3">
-                                @if($customer->is_active)
-                                    <span class="inline-flex rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700">Aktif</span>
-                                @else
-                                    <span class="inline-flex rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">Nonaktif</span>
-                                @endif
-                            </td>
                             @if(auth()->user()?->role === 'admin')
                                 <td class="px-4 py-3">
                                     <div class="flex items-center justify-center gap-2">
@@ -52,7 +44,6 @@
                                             data-customer-email="{{ $customer->email }}"
                                             data-customer-phone="{{ $customer->phone }}"
                                             data-customer-address="{{ $customer->address }}"
-                                            data-customer-active="{{ $customer->is_active ? 1 : 0 }}"
                                             class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
                                             aria-label="Edit"
                                         >
@@ -81,7 +72,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="{{ auth()->user()?->role === 'admin' ? 6 : 5 }}" class="px-4 py-6 text-center text-sm text-slate-500">Belum ada data customer.</td>
+                            <td colspan="{{ auth()->user()?->role === 'admin' ? 5 : 4 }}" class="px-4 py-6 text-center text-sm text-slate-500">Belum ada data customer.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -132,16 +123,9 @@
                     @enderror
                 </div>
 
-                <div class="flex items-center justify-between pt-2">
-                    <label class="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
-                        <input name="is_active" type="checkbox" value="1" class="h-4 w-4 rounded border-slate-300" checked />
-                        Aktif
-                    </label>
-
-                    <div class="flex items-center gap-2">
-                        <button type="button" data-close-modal="modal-tambah-customer" class="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">Batal</button>
-                        <button type="submit" class="inline-flex h-10 items-center justify-center rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-800">Simpan</button>
-                    </div>
+                <div class="flex items-center justify-end gap-2 pt-2">
+                    <button type="button" data-close-modal="modal-tambah-customer" class="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">Batal</button>
+                    <button type="submit" class="inline-flex h-10 items-center justify-center rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-800">Simpan</button>
                 </div>
                 </form>
             </div>
@@ -178,16 +162,9 @@
                     <input data-edit-customer-address name="address" type="text" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100" />
                 </div>
 
-                <div class="flex items-center justify-between pt-2">
-                    <label class="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
-                        <input data-edit-customer-active name="is_active" type="checkbox" value="1" class="h-4 w-4 rounded border-slate-300" />
-                        Aktif
-                    </label>
-
-                    <div class="flex items-center gap-2">
-                        <button type="button" data-close-modal="modal-edit-customer" class="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">Batal</button>
-                        <button type="submit" class="inline-flex h-10 items-center justify-center rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-800">Simpan</button>
-                    </div>
+                <div class="flex items-center justify-end gap-2 pt-2">
+                    <button type="button" data-close-modal="modal-edit-customer" class="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">Batal</button>
+                    <button type="submit" class="inline-flex h-10 items-center justify-center rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-800">Simpan</button>
                 </div>
                 </form>
             </div>

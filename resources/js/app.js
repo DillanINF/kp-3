@@ -201,6 +201,23 @@ const getInputPoBaseUrl = () => {
     return url && String(url).trim().length > 0 ? String(url) : null;
 };
 
+const navigateToInputPoByNoStr = (invoiceNoStr) => {
+    const raw = String(invoiceNoStr ?? '').trim();
+    if (!raw.length) return;
+
+    const base = getInputPoBaseUrl();
+    if (!base) {
+        window.alert('URL Input PO belum tersedia.');
+        return;
+    }
+
+    if (!base.includes('__NO__')) {
+        return;
+    }
+
+    window.location.href = String(base).replace('__NO__', encodeURIComponent(raw));
+};
+
 const navigateToInputPo = (invoiceNo) => {
     if (!Number.isFinite(invoiceNo)) return;
     const base = getInputPoBaseUrl();
@@ -209,9 +226,33 @@ const navigateToInputPo = (invoiceNo) => {
         return;
     }
 
+    if (base.includes('__ID__')) {
+        window.alert('URL Input PO belum tersedia.');
+        return;
+    }
+
     const url = new URL(base, window.location.origin);
     url.searchParams.set('invoiceNo', String(invoiceNo));
     window.location.href = url.toString();
+};
+
+const navigateToInputPoById = (invoiceId) => {
+    const id = Number.parseInt(String(invoiceId ?? ''), 10);
+    if (!Number.isFinite(id) || id <= 0) return;
+
+    const base = getInputPoBaseUrl();
+    if (!base) {
+        window.alert('URL Input PO belum tersedia.');
+        return;
+    }
+
+    if (!base.includes('__ID__')) {
+        // fallback: if template is not provided
+        window.location.href = String(base);
+        return;
+    }
+
+    window.location.href = String(base).replace('__ID__', String(id));
 };
 
 const hydratePoPageFromDom = () => {
@@ -587,6 +628,33 @@ document.addEventListener('click', (e) => {
         return;
     }
 
+    const openAddSupplierItemBtn = e.target.closest('[data-action="open-add-supplier-item"]');
+    if (openAddSupplierItemBtn) {
+        const supplierId = openAddSupplierItemBtn.getAttribute('data-supplier-id') || '';
+        const createUrl = openAddSupplierItemBtn.getAttribute('data-supplier-item-create-url') || '';
+
+        const form = document.querySelector('[data-add-supplier-item-form]');
+        if (form && createUrl) {
+            form.setAttribute('action', createUrl);
+        }
+
+        const openSupplierIdEl = document.querySelector('[data-add-supplier-item-open-supplier-id]');
+        if (openSupplierIdEl) openSupplierIdEl.value = String(supplierId);
+
+        const nameEl = document.querySelector('[data-add-supplier-item-name]');
+        if (nameEl) nameEl.value = '';
+
+        const unitEl = document.querySelector('[data-add-supplier-item-unit]');
+        if (unitEl) unitEl.value = 'pcs';
+
+        const priceEl = document.querySelector('[data-add-supplier-item-buy-price]');
+        if (priceEl) priceEl.value = '';
+
+        openModal('modal-add-supplier-item');
+        if (nameEl) nameEl.focus();
+        return;
+    }
+
     const removeItemBtn = e.target.closest('[data-po-remove-item]');
     if (removeItemBtn) {
         const row = removeItemBtn.closest('[data-po-item-row]');
@@ -617,7 +685,6 @@ document.addEventListener('click', (e) => {
         const email = editCustomerBtn.getAttribute('data-customer-email') || '';
         const phone = editCustomerBtn.getAttribute('data-customer-phone') || '';
         const address = editCustomerBtn.getAttribute('data-customer-address') || '';
-        const isActive = editCustomerBtn.getAttribute('data-customer-active') || '0';
 
         const form = document.querySelector('[data-edit-customer-form]');
         if (form) {
@@ -631,13 +698,11 @@ document.addEventListener('click', (e) => {
         const emailEl = document.querySelector('[data-edit-customer-email]');
         const phoneEl = document.querySelector('[data-edit-customer-phone]');
         const addressEl = document.querySelector('[data-edit-customer-address]');
-        const activeEl = document.querySelector('[data-edit-customer-active]');
 
         if (nameEl) nameEl.value = name;
         if (emailEl) emailEl.value = email;
         if (phoneEl) phoneEl.value = phone;
         if (addressEl) addressEl.value = address;
-        if (activeEl) activeEl.checked = isActive === '1';
 
         openModal('modal-edit-customer');
         return;
@@ -676,6 +741,31 @@ document.addEventListener('click', (e) => {
         if (activeEl) activeEl.checked = isActive === '1';
 
         openModal('modal-edit-supplier');
+        return;
+    }
+
+    const editSupplierItemBtn = e.target.closest('[data-action="edit-supplier-item"]');
+    if (editSupplierItemBtn) {
+        const updateUrl = editSupplierItemBtn.getAttribute('data-supplier-item-update-url') || '';
+        const buyPrice = editSupplierItemBtn.getAttribute('data-supplier-item-buy-price') || '0';
+        const name = editSupplierItemBtn.getAttribute('data-supplier-item-name') || '';
+        const unit = editSupplierItemBtn.getAttribute('data-supplier-item-unit') || '';
+
+        const form = document.querySelector('[data-edit-supplier-item-form]');
+        if (form && updateUrl) {
+            form.setAttribute('action', updateUrl);
+        }
+
+        const priceEl = document.querySelector('[data-edit-supplier-item-buy-price]');
+        if (priceEl) priceEl.value = String(buyPrice);
+
+        const nameEl = document.querySelector('[data-edit-supplier-item-name]');
+        if (nameEl) nameEl.value = String(name);
+
+        const unitEl = document.querySelector('[data-edit-supplier-item-unit]');
+        if (unitEl) unitEl.value = String(unit);
+
+        openModal('modal-edit-supplier-item');
         return;
     }
 
@@ -829,6 +919,19 @@ document.addEventListener('dblclick', (e) => {
 
     const row = e.target.closest('[data-invoice-rows] tr');
     if (!row) return;
+
+    const invoiceNoStr = row.getAttribute('data-invoice-no-str');
+    if (invoiceNoStr) {
+        navigateToInputPoByNoStr(invoiceNoStr);
+        return;
+    }
+
+    const invoiceId = row.getAttribute('data-invoice-id');
+    if (invoiceId) {
+        navigateToInputPoById(invoiceId);
+        return;
+    }
+
     const invoiceNo = Number.parseInt(row.getAttribute('data-invoice-no') || '', 10);
     if (!Number.isFinite(invoiceNo)) return;
     navigateToInputPo(invoiceNo);

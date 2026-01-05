@@ -88,17 +88,7 @@
                                     <div class="mb-2 flex items-center justify-between gap-3">
                                         <div class="text-sm font-semibold text-slate-900">Barang Supplier</div>
                                         @if(auth()->user()?->role === 'admin')
-                                            <form action="{{ route('masters.suppliers.items.store', $supplier) }}" method="POST" class="flex flex-wrap items-center gap-2">
-                                                @csrf
-                                                <select name="item_id" class="h-9 rounded-md border border-slate-200 bg-white px-3 text-xs text-slate-700" required>
-                                                    <option value="" disabled selected>Pilih Barang</option>
-                                                    @foreach($items ?? [] as $masterItem)
-                                                        <option value="{{ $masterItem->id }}">{{ $masterItem->name }}</option>
-                                                    @endforeach
-                                                </select>
-                                                <input name="buy_price" type="number" min="0" step="1" value="0" placeholder="Harga beli default" class="h-9 w-36 rounded-md border border-slate-200 bg-white px-3 text-xs text-slate-700" />
-                                                <button type="submit" class="inline-flex h-9 items-center justify-center rounded-md bg-slate-900 px-3 text-xs font-semibold text-white hover:bg-slate-800">Link</button>
-                                            </form>
+                                            <button type="button" data-action="open-add-supplier-item" data-supplier-id="{{ $supplier->id }}" data-supplier-item-create-url="{{ route('masters.suppliers.items.store_new', $supplier) }}" class="inline-flex h-9 items-center justify-center rounded-md bg-slate-900 px-3 text-xs font-semibold text-white hover:bg-slate-800">+</button>
                                         @endif
                                     </div>
                                     @if(($supplier->supplierItems?->count() ?? 0) > 0)
@@ -123,6 +113,21 @@
                                                             @if(auth()->user()?->role === 'admin')
                                                                 <td class="px-3 py-2">
                                                                     <div class="flex items-center justify-center gap-2">
+                                                                        <button
+                                                                            type="button"
+                                                                            data-action="edit-supplier-item"
+                                                                            data-supplier-item-update-url="{{ route('masters.suppliers.items.update', [$supplier, $supplierItem]) }}"
+                                                                            data-supplier-item-buy-price="{{ (int) ($supplierItem->buy_price ?? 0) }}"
+                                                                            data-supplier-item-name="{{ $supplierItem->item?->name ?? '' }}"
+                                                                            data-supplier-item-unit="{{ $supplierItem->item?->unit ?? '' }}"
+                                                                            class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                                                                            aria-label="Edit"
+                                                                        >
+                                                                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4">
+                                                                                <path d="M12 20H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                                                                <path d="M16.5 3.5C17.3284 2.67157 18.6716 2.67157 19.5 3.5C20.3284 4.32843 20.3284 5.67157 19.5 6.5L8 18L3 19L4 14L16.5 3.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                                                                            </svg>
+                                                                        </button>
                                                                         <form action="{{ route('masters.suppliers.items.destroy', [$supplier, $supplierItem]) }}" method="POST" onsubmit="return confirm('Hapus barang supplier ini?')">
                                                                             @csrf
                                                                             @method('DELETE')
@@ -153,6 +158,77 @@
     </div>
 
     @if(auth()->user()?->role === 'admin')
+        <div id="modal-add-supplier-item" data-modal class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 p-4">
+            <div class="w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-xl">
+                <div class="bg-slate-900 px-6 py-5">
+                    <div class="text-lg font-semibold text-white">Tambah Barang Supplier</div>
+                    <div class="mt-1 text-sm text-slate-200">Isi nama produk, satuan, dan harga beli default.</div>
+                </div>
+
+                <form data-add-supplier-item-form action="" method="POST" class="space-y-4 px-6 py-6">
+                    @csrf
+                    <input data-add-supplier-item-open-supplier-id name="open_supplier_id" type="hidden" value="" />
+
+                    <div class="space-y-2">
+                        <label class="text-sm font-semibold text-slate-700">Nama Produk</label>
+                        <input data-add-supplier-item-name name="name" type="text" placeholder="Nama produk" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100" required />
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-sm font-semibold text-slate-700">Satuan</label>
+                        <select data-add-supplier-item-unit name="unit" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100" required>
+                            <option value="pcs" selected>pcs</option>
+                            <option value="qty">qty</option>
+                        </select>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-sm font-semibold text-slate-700">Harga Beli Default</label>
+                        <input data-add-supplier-item-buy-price name="buy_price" type="number" min="0" step="1" placeholder="Harga beli default" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100" />
+                    </div>
+
+                    <div class="flex items-center justify-end gap-2 pt-2">
+                        <button type="button" data-close-modal="modal-add-supplier-item" class="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">Batal</button>
+                        <button type="submit" class="inline-flex h-10 items-center justify-center rounded-xl bg-slate-900 px-6 text-sm font-semibold text-white hover:bg-slate-800">Simpan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div id="modal-edit-supplier-item" data-modal class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 p-4">
+            <div class="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-xl">
+                <div class="bg-slate-900 px-6 py-5">
+                    <div class="text-lg font-semibold text-white">Edit Barang Supplier</div>
+                    <div class="mt-1 text-sm text-slate-200">Perbarui harga beli default barang supplier.</div>
+                </div>
+
+                <form data-edit-supplier-item-form action="" method="POST" class="space-y-4 px-6 py-6">
+                    @csrf
+                    @method('PUT')
+
+                    <div class="space-y-2">
+                        <label class="text-sm font-semibold text-slate-700">Nama Barang</label>
+                        <input data-edit-supplier-item-name name="name" type="text" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100" required />
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-sm font-semibold text-slate-700">Satuan</label>
+                        <input data-edit-supplier-item-unit name="unit" type="text" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100" required />
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-sm font-semibold text-slate-700">Harga Beli Default</label>
+                        <input data-edit-supplier-item-buy-price name="buy_price" type="number" min="0" step="1" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100" required />
+                    </div>
+
+                    <div class="flex items-center justify-end gap-2 pt-2">
+                        <button type="button" data-close-modal="modal-edit-supplier-item" class="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">Batal</button>
+                        <button type="submit" class="inline-flex h-10 items-center justify-center rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-800">Simpan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <div id="modal-tambah-supplier" data-modal class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 p-4">
             <div class="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-xl">
                 <div class="bg-slate-900 px-6 py-5">

@@ -13,8 +13,11 @@ return new class extends Migration
     {
         Schema::create('item_outs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('customer_id')->constrained('customers')->cascadeOnDelete();
+            $table->foreignId('customer_id')->nullable()->constrained('customers')->nullOnDelete();
             $table->foreignId('item_id')->constrained('items')->cascadeOnDelete();
+            $table->string('type', 20)->default('sale');
+            $table->unsignedInteger('buy_price')->default(0);
+            $table->unsignedInteger('sell_price')->default(0);
             $table->unsignedInteger('qty');
             $table->date('date');
             $table->timestamps();

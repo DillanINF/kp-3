@@ -30,7 +30,7 @@ class CustomerController extends Controller
         $customer->name = $validated['name'];
         $customer->email = $validated['email'] ?? null;
         $customer->phone = $validated['phone'] ?? null;
-        $customer->is_active = $request->boolean('is_active');
+        $customer->is_active = true;
         if (Schema::hasColumn('customers', 'address')) {
             $customer->address = $validated['address'] ?? null;
         }
@@ -51,7 +51,7 @@ class CustomerController extends Controller
         $customer->name = $validated['name'];
         $customer->email = $validated['email'] ?? null;
         $customer->phone = $validated['phone'] ?? null;
-        $customer->is_active = $request->boolean('is_active');
+        $customer->is_active = true;
         if (Schema::hasColumn('customers', 'address')) {
             $customer->address = $validated['address'] ?? null;
         }
