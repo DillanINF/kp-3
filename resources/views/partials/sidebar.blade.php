@@ -85,7 +85,7 @@
                 </div>
             </details>
 
-            @if(auth()->check() && (auth()->user()?->role === 'admin'))
+            @if(auth()->check() && in_array(auth()->user()?->role, ['admin', 'manager'], true))
                 <a href="{{ route('settings') }}" class="sidebar-link group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900 {{ request()->routeIs('settings') ? 'bg-slate-100 text-slate-900' : '' }}">
                     <span class="sidebar-icon flex h-8 w-8 items-center justify-center rounded-md bg-slate-100 text-slate-700 transition-colors group-hover:bg-slate-300 {{ request()->routeIs('settings') ? 'bg-slate-300' : '' }}">
                         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4">

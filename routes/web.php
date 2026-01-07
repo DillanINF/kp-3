@@ -8,6 +8,7 @@ use App\Http\Controllers\ItemOutController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\SupplierRequestController;
 use Illuminate\Support\Facades\Route;
@@ -97,7 +98,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/items-out/{itemOut}', [ItemOutController::class, 'destroy'])->middleware('role:admin')->name('items_out.destroy');
     });
 
-    Route::get('/settings', function () {
-        return view('settings');
-    })->middleware('role:admin')->name('settings');
+    Route::get('/settings', [SettingsController::class, 'index'])->middleware('role:admin,manager')->name('settings');
+    Route::post('/settings/profile', [SettingsController::class, 'updateProfile'])->middleware('role:admin,manager')->name('settings.profile.update');
+    Route::post('/settings/password', [SettingsController::class, 'updatePassword'])->middleware('role:admin,manager')->name('settings.password.update');
 });
