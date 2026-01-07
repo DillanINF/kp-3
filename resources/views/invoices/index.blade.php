@@ -6,6 +6,22 @@
 
 @section('content')
     <div class="space-y-6">
+        @if(session('success'))
+            <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+                {{ session('success') }}
+            </div>
+        @endif
+        @if(session('warning'))
+            <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                {{ session('warning') }}
+            </div>
+        @endif
+        @if(session('error'))
+            <div class="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
+                {{ session('error') }}
+            </div>
+        @endif
+
         <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div class="flex items-start gap-3">
@@ -115,7 +131,14 @@
                     </thead>
                     <tbody class="divide-y divide-slate-200" data-invoice-rows data-input-po-url="{{ route('invoices.input_po_by_no', ['invoiceNo' => '__NO__']) }}">
                         @forelse($invoices ?? [] as $invoice)
-                            <tr class="transition-colors hover:bg-indigo-50" data-invoice-no-str="{{ $invoice->invoice_no }}" data-invoice-id="{{ $invoice->id }}" data-invoice-no="{{ (int) preg_replace('/\D+/', '', (string) $invoice->invoice_no) }}">
+                            @php
+                                $isDraft = ($invoice->status ?? '') === 'draft';
+                                $isEmpty = $isDraft
+                                    && empty($invoice->po_no)
+                                    && (int) ($invoice->grand_total ?? 0) === 0
+                                    && (int) ($invoice->qty_total ?? 0) === 0;
+                            @endphp
+                            <tr class="transition-colors hover:bg-indigo-50 {{ ($invoice->status ?? '') === 'draft' ? 'cursor-pointer' : '' }}" data-po-editable="{{ ($invoice->status ?? '') === 'draft' ? '1' : '0' }}" data-input-po-href="{{ route('invoices.input_po_by_no', ['invoiceNo' => $invoice->invoice_no]) }}" data-invoice-no-str="{{ $invoice->invoice_no }}" data-invoice-id="{{ $invoice->id }}" data-invoice-no="{{ (int) preg_replace('/\D+/', '', (string) $invoice->invoice_no) }}">
                                 <td class="px-4 py-3 text-slate-700">{{ optional($invoice->date)->format('d/m/Y') }}</td>
                                 <td class="px-4 py-3">
                                     <span class="inline-flex items-center justify-center rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-700">{{ $invoice->invoice_no }}</span>
@@ -125,10 +148,10 @@
                                 <td class="px-4 py-3 text-slate-500">{{ $invoice->grand_total > 0 ? 'Rp ' . number_format($invoice->grand_total, 0, ',', '.') : '-' }}</td>
                                 <td class="px-4 py-3 text-slate-500">{{ $invoice->qty_total > 0 ? $invoice->qty_total : '-' }}</td>
                                 <td class="px-4 py-3 text-center">
-                                    <form action="{{ route('invoices.destroy', $invoice) }}" method="POST" onsubmit="return confirm('Hapus invoice ini?')" class="inline-flex">
+                                    <form action="{{ route('invoices.destroy', $invoice) }}" method="POST" onsubmit="return {{ $isEmpty ? "confirm('Hapus invoice ini?')" : 'false' }}" class="inline-flex">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" data-action="delete-invoice" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100" aria-label="Hapus">
+                                        <button type="submit" data-action="delete-invoice" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border {{ $isEmpty ? 'border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100' : 'border-slate-200 bg-slate-50 text-slate-400 cursor-not-allowed' }}" aria-label="Hapus" {{ $isEmpty ? '' : 'disabled' }}>
                                             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4">
                                                 <path d="M3 6H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                                                 <path d="M8 6V4H16V6" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
@@ -150,6 +173,34 @@
             </div>
         </div>
     </div>
+
+    <script>
+        (function () {
+            window.addEventListener('pageshow', function (e) {
+                if (e && e.persisted) {
+                    window.location.reload();
+                }
+            });
+
+            document.addEventListener('dblclick', function (e) {
+                const actionArea = e.target.closest('button, a, form, [data-action], [data-open-modal], [data-close-modal]');
+                if (actionArea) return;
+
+                const row = e.target.closest('[data-invoice-rows] tr');
+                if (!row) return;
+
+                const editable = row.getAttribute('data-po-editable');
+                if (String(editable) !== '1') {
+                    return;
+                }
+
+                const href = row.getAttribute('data-input-po-href');
+                if (href && String(href).trim().length > 0) {
+                    window.location.href = String(href);
+                }
+            });
+        })();
+    </script>
 
     <div id="modal-tambah-invoice" data-modal class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 p-4">
         <div class="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-xl">

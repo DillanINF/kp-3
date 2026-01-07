@@ -920,6 +920,17 @@ document.addEventListener('dblclick', (e) => {
     const row = e.target.closest('[data-invoice-rows] tr');
     if (!row) return;
 
+    const editable = row.getAttribute('data-po-editable');
+    if (String(editable) !== '1') {
+        return;
+    }
+
+    const directHref = row.getAttribute('data-input-po-href');
+    if (directHref && String(directHref).trim().length > 0) {
+        window.location.href = String(directHref);
+        return;
+    }
+
     const invoiceNoStr = row.getAttribute('data-invoice-no-str');
     if (invoiceNoStr) {
         navigateToInputPoByNoStr(invoiceNoStr);

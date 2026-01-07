@@ -33,6 +33,8 @@ Route::middleware('auth')->group(function () {
 
         Route::post('/', [InvoiceController::class, 'store'])->name('store');
 
+        Route::post('/{invoice}/accept', [InvoiceController::class, 'accept'])->name('accept');
+
         Route::delete('/{invoice}', [InvoiceController::class, 'destroy'])->name('destroy');
 
         Route::get('/by-no/{invoiceNo}/input-po', [InvoiceController::class, 'inputPoByNo'])->name('input_po_by_no');
@@ -40,9 +42,16 @@ Route::middleware('auth')->group(function () {
         Route::get('/{invoice}/input-po', [InvoiceController::class, 'inputPo'])->name('input_po');
         Route::post('/{invoice}/input-po', [InvoiceController::class, 'storePo'])->name('input_po.store');
 
-        Route::get('/po-belum-terkirim', function () {
-            return view('invoices.po_pending');
-        })->name('po_pending');
+        Route::get('/po-belum-terkirim', [InvoiceController::class, 'poPending'])->name('po_pending');
+
+        Route::post('/po-belum-terkirim/{pending}/fulfill', [InvoiceController::class, 'fulfillPoPending'])
+            ->name('po_pending.fulfill');
+
+        Route::put('/po-belum-terkirim/{pending}', [InvoiceController::class, 'updatePoPending'])
+            ->name('po_pending.update');
+
+        Route::delete('/po-belum-terkirim/{pending}', [InvoiceController::class, 'destroyPoPending'])
+            ->name('po_pending.destroy');
     });
 
     Route::prefix('masters')->name('masters.')->group(function () {

@@ -6,6 +6,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use App\Models\InvoiceApproval;
+use App\Models\PoPendingItem;
 
 class Invoice extends Model
 {
@@ -36,5 +39,15 @@ class Invoice extends Model
     public function details(): HasMany
     {
         return $this->hasMany(InvoiceDetail::class);
+    }
+
+    public function approval(): HasOne
+    {
+        return $this->hasOne(InvoiceApproval::class);
+    }
+
+    public function poPendingItems(): HasMany
+    {
+        return $this->hasMany(PoPendingItem::class);
     }
 }

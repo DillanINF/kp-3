@@ -6,42 +6,46 @@
 
 @section('content')
     <div data-dashboard class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <div class="rounded-xl border border-slate-200 bg-white p-4">
-            <div class="text-sm text-slate-500">Invoice bulan ini</div>
-            <div class="mt-2 text-2xl font-semibold text-slate-900" data-kpi="invoice-this-month">0</div>
-            <div class="mt-1 text-xs text-slate-500">Dari data invoice</div>
-        </div>
-        <div class="rounded-xl border border-slate-200 bg-white p-4">
-            <div class="text-sm text-slate-500">Jumlah customer</div>
-            <div class="mt-2 text-2xl font-semibold text-slate-900" data-kpi="customers">{{ $customersCount ?? 0 }}</div>
-            <div class="mt-1 text-xs text-slate-500">Terdaftar</div>
-        </div>
-        <div class="rounded-xl border border-slate-200 bg-white p-4">
-            <div class="text-sm text-slate-500">Jumlah supplier</div>
-            <div class="mt-2 text-2xl font-semibold text-slate-900" data-kpi="suppliers">0</div>
-            <div class="mt-1 text-xs text-slate-500">Terdaftar</div>
-        </div>
-        <div class="rounded-xl border border-slate-200 bg-white p-4">
-            <div class="text-sm text-slate-500">Jumlah jenis barang</div>
-            <div class="mt-2 text-2xl font-semibold text-slate-900" data-kpi="items">0</div>
-            <div class="mt-1 text-xs text-slate-500">Master barang</div>
-        </div>
-
-        <div class="rounded-xl border border-slate-200 bg-white p-4">
-            <div class="text-sm text-slate-500">PO belum terkirim</div>
-            <div class="mt-2 text-2xl font-semibold text-slate-900" data-kpi="po-pending">0</div>
-            <div class="mt-1 text-xs text-slate-500">Perlu tindak lanjut</div>
-        </div>
-        <div class="rounded-xl border border-slate-200 bg-white p-4">
-            <div class="text-sm text-slate-500">Barang keluar (1 bulan terakhir)</div>
-            <div class="mt-2 text-2xl font-semibold text-slate-900" data-kpi="goods-out">0</div>
-            <div class="mt-1 text-xs text-slate-500">Ke customer</div>
-        </div>
-        <div class="rounded-xl border border-slate-200 bg-white p-4">
-            <div class="text-sm text-slate-500">Barang masuk (1 bulan terakhir)</div>
-            <div class="mt-2 text-2xl font-semibold text-slate-900" data-kpi="goods-in">0</div>
-            <div class="mt-1 text-xs text-slate-500">Dari supplier</div>
-        </div>
+        <a href="{{ route('invoices.index') }}" class="rounded-xl border border-slate-200 bg-white p-4 hover:bg-slate-50">
+            <div class="text-sm text-slate-500">Invoice</div>
+            <div class="mt-2 text-2xl font-semibold text-slate-900">{{ $invoicesCount ?? 0 }}</div>
+            <div class="mt-1 text-xs text-slate-500">Total data invoice</div>
+        </a>
+        <a href="{{ route('masters.items_supplier') }}" class="rounded-xl border border-slate-200 bg-white p-4 hover:bg-slate-50">
+            <div class="text-sm text-slate-500">Pengeluaran</div>
+            <div class="mt-2 text-2xl font-semibold text-slate-900">Rp {{ number_format($expenseTotal ?? 0, 0, ',', '.') }}</div>
+            <div class="mt-1 text-xs text-slate-500">Total pemesanan supplier (accepted)</div>
+        </a>
+        <a href="{{ route('invoices.index') }}" class="rounded-xl border border-slate-200 bg-white p-4 hover:bg-slate-50">
+            <div class="text-sm text-slate-500">Pendapatan</div>
+            <div class="mt-2 text-2xl font-semibold text-slate-900">Rp {{ number_format($revenueTotal ?? 0, 0, ',', '.') }}</div>
+            <div class="mt-1 text-xs text-slate-500">Total invoice posted</div>
+        </a>
+        <a href="{{ route('masters.items') }}" class="rounded-xl border border-slate-200 bg-white p-4 hover:bg-slate-50">
+            <div class="text-sm text-slate-500">Data barang</div>
+            <div class="mt-2 text-2xl font-semibold text-slate-900">{{ $itemsCount ?? 0 }}</div>
+            <div class="mt-1 text-xs text-slate-500">Jumlah jenis barang</div>
+        </a>
+        <a href="{{ route('masters.items_out') }}" class="rounded-xl border border-slate-200 bg-white p-4 hover:bg-slate-50">
+            <div class="text-sm text-slate-500">Barang keluar</div>
+            <div class="mt-2 text-2xl font-semibold text-slate-900">{{ $goodsOutTotalQty ?? 0 }}</div>
+            <div class="mt-1 text-xs text-slate-500">Total qty keluar</div>
+        </a>
+        <a href="{{ route('masters.items_in') }}" class="rounded-xl border border-slate-200 bg-white p-4 hover:bg-slate-50">
+            <div class="text-sm text-slate-500">Barang masuk</div>
+            <div class="mt-2 text-2xl font-semibold text-slate-900">{{ $goodsInTotalQty ?? 0 }}</div>
+            <div class="mt-1 text-xs text-slate-500">Total qty masuk</div>
+        </a>
+        <a href="{{ route('masters.customers') }}" class="rounded-xl border border-slate-200 bg-white p-4 hover:bg-slate-50">
+            <div class="text-sm text-slate-500">Data customer</div>
+            <div class="mt-2 text-2xl font-semibold text-slate-900">{{ $customersCount ?? 0 }}</div>
+            <div class="mt-1 text-xs text-slate-500">Customer terdaftar</div>
+        </a>
+        <a href="{{ route('masters.suppliers') }}" class="rounded-xl border border-slate-200 bg-white p-4 hover:bg-slate-50">
+            <div class="text-sm text-slate-500">Data supplier</div>
+            <div class="mt-2 text-2xl font-semibold text-slate-900">{{ $suppliersCount ?? 0 }}</div>
+            <div class="mt-1 text-xs text-slate-500">Supplier terdaftar</div>
+        </a>
     </div>
 
     <div class="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-3">
@@ -61,21 +65,29 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-200 bg-white">
-                        <tr>
-                            <td class="px-4 py-3 text-slate-600">2025-12-23</td>
-                            <td class="px-4 py-3">Invoice INV-001 dibuat</td>
-                            <td class="px-4 py-3"><span class="inline-flex rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700">Selesai</span></td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-3 text-slate-600">2025-12-22</td>
-                            <td class="px-4 py-3">Barang masuk dari Supplier A</td>
-                            <td class="px-4 py-3"><span class="inline-flex rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">Tercatat</span></td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-3 text-slate-600">2025-12-21</td>
-                            <td class="px-4 py-3">PO PO-005 masih menunggu pengiriman</td>
-                            <td class="px-4 py-3"><span class="inline-flex rounded-full bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700">Pending</span></td>
-                        </tr>
+                        @forelse(($activities ?? []) as $a)
+                            @php
+                                $tone = (string) ($a['tone'] ?? 'neutral');
+                                $badge = 'bg-slate-100 text-slate-700';
+                                if ($tone === 'success') $badge = 'bg-emerald-50 text-emerald-700';
+                                if ($tone === 'warning') $badge = 'bg-amber-50 text-amber-700';
+                            @endphp
+                            <tr>
+                                <td class="px-4 py-3 text-slate-600">{{ ($a['at'] ?? null) ? $a['at']->timezone(config('app.timezone'))->format('d/m/Y H:i:s') : '-' }}</td>
+                                <td class="px-4 py-3">
+                                    @if(!empty($a['url']))
+                                        <a href="{{ $a['url'] }}" class="text-slate-700 hover:text-slate-900 hover:underline">{{ $a['label'] ?? '-' }}</a>
+                                    @else
+                                        {{ $a['label'] ?? '-' }}
+                                    @endif
+                                </td>
+                                <td class="px-4 py-3"><span class="inline-flex rounded-full px-2 py-1 text-xs font-medium {{ $badge }}">{{ $a['status'] ?? '-' }}</span></td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="3" class="px-4 py-6 text-center text-sm text-slate-500">Belum ada aktivitas.</td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>

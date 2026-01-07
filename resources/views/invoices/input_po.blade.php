@@ -129,4 +129,45 @@
             </div>
         </div>
     </form>
+
+    <script>
+        (function () {
+            const toIntOrZero = (value) => {
+                const raw = String(value ?? '').trim();
+                if (!raw.length) return 0;
+                const n = Number.parseInt(raw, 10);
+                return Number.isFinite(n) ? n : 0;
+            };
+
+            const recalcRowTotals = () => {
+                const rows = document.querySelectorAll('[data-po-items] [data-po-item-row]');
+                rows.forEach((row) => {
+                    const qty = toIntOrZero(row.querySelector('[data-po-item-qty]')?.value);
+                    const price = toIntOrZero(row.querySelector('[data-po-item-price]')?.value);
+                    const total = qty * price;
+                    const totalEl = row.querySelector('[data-po-item-total]');
+                    if (totalEl) totalEl.value = String(total);
+                });
+            };
+
+            document.addEventListener('input', (e) => {
+                if (!e.target.closest('[data-po-items]')) return;
+                if (e.target.closest('[data-po-item-qty]') || e.target.closest('[data-po-item-price]')) {
+                    recalcRowTotals();
+                }
+            });
+
+            document.addEventListener('change', (e) => {
+                if (!e.target.closest('[data-po-items]')) return;
+                if (e.target.closest('[data-po-item-id]')) {
+                    // updatePrice() already dispatches input on price; this is just a safe fallback.
+                    setTimeout(recalcRowTotals, 0);
+                }
+            });
+
+            document.addEventListener('DOMContentLoaded', () => {
+                recalcRowTotals();
+            });
+        })();
+    </script>
 @endsection
