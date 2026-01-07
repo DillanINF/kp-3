@@ -136,6 +136,7 @@ class InvoiceController extends Controller
             $invoice->load('customer');
 
             $hasPending = false;
+            $totalPendingQty = 0;
 
             if ($invoice->status !== 'draft') {
                 abort(422, 'Invoice sudah diproses dan tidak bisa diubah.');
@@ -168,6 +169,7 @@ class InvoiceController extends Controller
 
                 if ($pendingQty > 0) {
                     $hasPending = true;
+                    $totalPendingQty += $pendingQty;
                     PoPendingItem::query()->create([
                         'invoice_id' => $invoice->id,
                         'invoice_no' => $invoice->invoice_no,
@@ -213,16 +215,25 @@ class InvoiceController extends Controller
             $invoice->po_no = $validated['po_no'] ?? null;
             $invoice->grand_total = $grandTotal;
             $invoice->qty_total = $qtyTotal;
-            $invoice->status = 'posted';
+            $invoice->status = $qtyTotal > 0 ? 'posted' : 'draft';
             $invoice->save();
 
             return [
                 'has_pending' => $hasPending,
+                'total_pending_qty' => $totalPendingQty,
             ];
         });
 
         if (!empty($result['has_pending'])) {
-            return redirect()->route('invoices.index')->with('warning', 'Stok kurang. Sisa barang otomatis tercatat di PO Belum Terkirim.');
+            $pendingQty = (int) ($result['total_pending_qty'] ?? 0);
+            $msg = 'Qty yang kamu input melebihi stok. ';
+            if ($pendingQty > 0) {
+                $msg .= 'Sisa pesanan ' . $pendingQty . ' pcs otomatis masuk ke menu PO Belum Terkirim.';
+            } else {
+                $msg .= 'Sisa pesanan otomatis masuk ke menu PO Belum Terkirim.';
+            }
+
+            return redirect()->route('invoices.index')->with('warning', $msg);
         }
 
         return redirect()->route('invoices.index')->with('success', 'PO berhasil disimpan.');
@@ -379,6 +390,13 @@ class InvoiceController extends Controller
     {
         DB::transaction(function () use ($invoice) {
             $invoice->refresh();
+
+            $pendingCount = PoPendingItem::query()
+                ->where('invoice_id', $invoice->id)
+                ->count();
+            if ($pendingCount > 0) {
+                abort(422, 'Invoice tidak bisa dihapus karena masih ada data di PO Belum Terkirim.');
+            }
 
             $approvalStatus = InvoiceApproval::query()
                 ->where('invoice_id', $invoice->id)

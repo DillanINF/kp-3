@@ -34,11 +34,21 @@ class ReportController extends Controller
 
         $salesProfit = $salesRevenue - $salesCogs;
 
-        $lossDamagedExpired = $rows
-            ->whereIn('type', ['damaged', 'expired'])
+        $lossDamaged = $rows
+            ->where('type', 'damaged')
             ->sum(fn ($r) => (int) $r->buy_price * (int) $r->qty);
 
-        $net = $salesProfit - $lossDamagedExpired;
+        $lossExpired = $rows
+            ->where('type', 'expired')
+            ->sum(fn ($r) => (int) $r->buy_price * (int) $r->qty);
+
+        $lossOther = $rows
+            ->where('type', 'other')
+            ->sum(fn ($r) => (int) $r->buy_price * (int) $r->qty);
+
+        $lossTotal = $lossDamaged + $lossExpired + $lossOther;
+
+        $net = $salesProfit - $lossTotal;
 
         return view('reports.index', [
             'fromDate' => $fromDate,
@@ -47,7 +57,11 @@ class ReportController extends Controller
             'salesRevenue' => $salesRevenue,
             'salesCogs' => $salesCogs,
             'salesProfit' => $salesProfit,
-            'lossDamagedExpired' => $lossDamagedExpired,
+            'lossDamagedExpired' => $lossDamaged + $lossExpired,
+            'lossDamaged' => $lossDamaged,
+            'lossExpired' => $lossExpired,
+            'lossOther' => $lossOther,
+            'lossTotal' => $lossTotal,
             'net' => $net,
         ]);
     }

@@ -8,6 +8,7 @@ use App\Models\ItemOut;
 use App\Models\SupplierItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class ItemOutController extends Controller
 {
@@ -27,22 +28,19 @@ class ItemOutController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'type' => ['required', 'string', 'in:sale,damaged,expired'],
-            'customer_id' => ['nullable', 'integer', 'exists:customers,id'],
+            'type' => ['required', 'string', 'in:damaged,expired,other'],
             'item_id' => ['required', 'integer', 'exists:items,id'],
             'qty' => ['required', 'integer', 'min:1'],
             'date' => ['required', 'date'],
         ]);
 
-        if ($validated['type'] === 'sale' && empty($validated['customer_id'])) {
-            return back()->withErrors(['customer_id' => 'Customer wajib dipilih untuk tipe penjualan.'])->withInput();
-        }
-
         DB::transaction(function () use ($validated) {
             $item = Item::query()->lockForUpdate()->findOrFail($validated['item_id']);
             $qty = (int) $validated['qty'];
             if ($item->stock < $qty) {
-                abort(422, 'Stok tidak mencukupi.');
+                throw ValidationException::withMessages([
+                    'qty' => 'Stok tidak mencukupi.',
+                ]);
             }
 
             $buyPrice = (int) (SupplierItem::query()
@@ -50,11 +48,11 @@ class ItemOutController extends Controller
                 ->orderBy('buy_price')
                 ->value('buy_price') ?? 0);
 
-            $sellPrice = $validated['type'] === 'sale' ? (int) ($item->price ?? 0) : 0;
+            $sellPrice = 0;
 
             ItemOut::query()->create([
                 'type' => $validated['type'],
-                'customer_id' => $validated['type'] === 'sale' ? $validated['customer_id'] : null,
+                'customer_id' => null,
                 'item_id' => $item->id,
                 'qty' => $qty,
                 'date' => $validated['date'],
@@ -71,11 +69,15 @@ class ItemOutController extends Controller
     public function update(Request $request, ItemOut $itemOut)
     {
         $validated = $request->validate([
-            'customer_id' => ['required', 'integer', 'exists:customers,id'],
+            'customer_id' => ['nullable', 'integer', 'exists:customers,id'],
             'item_id' => ['required', 'integer', 'exists:items,id'],
             'qty' => ['required', 'integer', 'min:1'],
             'date' => ['required', 'date'],
         ]);
+
+        if (($itemOut->type ?? '') === 'sale' && empty($validated['customer_id'])) {
+            return back()->withErrors(['customer_id' => 'Customer wajib dipilih untuk tipe penjualan.'])->withInput();
+        }
 
         DB::transaction(function () use ($itemOut, $validated) {
             $oldItemId = (int) $itemOut->item_id;
@@ -86,10 +88,12 @@ class ItemOutController extends Controller
             $newItem = Item::query()->lockForUpdate()->findOrFail($validated['item_id']);
             $newQty = (int) $validated['qty'];
             if ($newItem->stock < $newQty) {
-                abort(422, 'Stok tidak mencukupi.');
+                throw ValidationException::withMessages([
+                    'qty' => 'Stok tidak mencukupi.',
+                ]);
             }
 
-            $itemOut->customer_id = $validated['customer_id'];
+            $itemOut->customer_id = ($itemOut->type ?? '') === 'sale' ? ($validated['customer_id'] ?? null) : null;
             $itemOut->item_id = $validated['item_id'];
             $itemOut->qty = $validated['qty'];
             $itemOut->date = $validated['date'];

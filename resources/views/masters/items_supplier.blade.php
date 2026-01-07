@@ -136,11 +136,6 @@
                         </div>
                     </div>
 
-                    <div class="space-y-2">
-                        <label class="text-sm font-semibold text-slate-700">Catatan (opsional)</label>
-                        <textarea name="notes" rows="2" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none"></textarea>
-                    </div>
-
                     <div class="rounded-xl border border-slate-200">
                         <div class="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-3">
                             <div class="text-sm font-semibold text-slate-900">Detail Item</div>

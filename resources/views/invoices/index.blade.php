@@ -90,11 +90,6 @@
             </div>
         </div>
 
-        <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-            <span class="font-semibold">Peringatan:</span>
-            Setelah tanda terima ditandatangani, ubah status invoice pada kolom <span class="font-semibold">Status</span> menjadi <span class="font-semibold">Accept</span>. Sistem akan menyinkronkan data ke Jatuh Tempo agar penagihan berjalan tepat waktu.
-        </div>
-
         <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div class="flex flex-col gap-3 border-b border-slate-200 p-4 md:flex-row md:items-center md:justify-between">
                 <div class="flex items-start gap-3">
@@ -133,10 +128,11 @@
                         @forelse($invoices ?? [] as $invoice)
                             @php
                                 $isDraft = ($invoice->status ?? '') === 'draft';
+                                $pendingCount = (int) ($invoice->po_pending_items_count ?? 0);
                                 $isEmpty = $isDraft
-                                    && empty($invoice->po_no)
                                     && (int) ($invoice->grand_total ?? 0) === 0
-                                    && (int) ($invoice->qty_total ?? 0) === 0;
+                                    && (int) ($invoice->qty_total ?? 0) === 0
+                                    && $pendingCount <= 0;
                             @endphp
                             <tr class="transition-colors hover:bg-indigo-50 {{ ($invoice->status ?? '') === 'draft' ? 'cursor-pointer' : '' }}" data-po-editable="{{ ($invoice->status ?? '') === 'draft' ? '1' : '0' }}" data-input-po-href="{{ route('invoices.input_po_by_no', ['invoiceNo' => $invoice->invoice_no]) }}" data-invoice-no-str="{{ $invoice->invoice_no }}" data-invoice-id="{{ $invoice->id }}" data-invoice-no="{{ (int) preg_replace('/\D+/', '', (string) $invoice->invoice_no) }}">
                                 <td class="px-4 py-3 text-slate-700">{{ optional($invoice->date)->format('d/m/Y') }}</td>

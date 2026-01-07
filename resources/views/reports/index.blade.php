@@ -43,6 +43,21 @@
                 </div>
             </div>
 
+            <div class="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
+                <div class="rounded-lg border border-slate-200 bg-white p-4">
+                    <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">Kerugian Rusak</div>
+                    <div class="mt-1 text-lg font-semibold text-slate-900">Rp {{ number_format($lossDamaged ?? 0, 0, ',', '.') }}</div>
+                </div>
+                <div class="rounded-lg border border-slate-200 bg-white p-4">
+                    <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">Kerugian Expired</div>
+                    <div class="mt-1 text-lg font-semibold text-slate-900">Rp {{ number_format($lossExpired ?? 0, 0, ',', '.') }}</div>
+                </div>
+                <div class="rounded-lg border border-slate-200 bg-white p-4">
+                    <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">Kerugian Lainnya</div>
+                    <div class="mt-1 text-lg font-semibold text-slate-900">Rp {{ number_format($lossOther ?? 0, 0, ',', '.') }}</div>
+                </div>
+            </div>
+
             <div class="mt-3 rounded-lg border border-slate-200 bg-white p-4">
                 <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">Net</div>
                 <div class="mt-1 text-lg font-semibold text-slate-900">Rp {{ number_format($net ?? 0, 0, ',', '.') }}</div>
