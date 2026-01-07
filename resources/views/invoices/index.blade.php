@@ -6,6 +6,10 @@
 
 @section('content')
     <div class="space-y-6">
+        @php
+            $isAdmin = auth()->check() && (auth()->user()?->role === 'admin');
+        @endphp
+
         @if(session('success'))
             <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
                 {{ session('success') }}
@@ -61,20 +65,22 @@
 
                 <div class="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center md:justify-end">
                     <div class="flex flex-wrap items-center gap-2">
-                        <button type="button" data-open-modal="modal-atur-invoice" class="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-amber-600">
-                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4">
-                                <path d="M12 8V12L14.5 13.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2"/>
-                            </svg>
-                            Atur No Invoice
-                        </button>
-                        <button type="button" data-open-modal="modal-tambah-invoice" class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700">
-                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4">
-                                <path d="M12 5V19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                                <path d="M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                            </svg>
-                            Tambah No Invoice
-                        </button>
+                        @if($isAdmin)
+                            <button type="button" data-open-modal="modal-atur-invoice" class="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-amber-600">
+                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4">
+                                    <path d="M12 8V12L14.5 13.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2"/>
+                                </svg>
+                                Atur No Invoice
+                            </button>
+                            <button type="button" data-open-modal="modal-tambah-invoice" class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700">
+                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4">
+                                    <path d="M12 5V19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                    <path d="M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                </svg>
+                                Tambah No Invoice
+                            </button>
+                        @endif
                     </div>
 
                     <div class="relative">
@@ -121,7 +127,9 @@
                             <th class="px-4 py-3">No PO</th>
                             <th class="px-4 py-3">Total PO</th>
                             <th class="px-4 py-3">Qty</th>
-                            <th class="px-4 py-3 text-center">Aksi</th>
+                            @if($isAdmin)
+                                <th class="px-4 py-3 text-center">Aksi</th>
+                            @endif
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-200" data-invoice-rows data-input-po-url="{{ route('invoices.input_po_by_no', ['invoiceNo' => '__NO__']) }}">
@@ -134,7 +142,7 @@
                                     && (int) ($invoice->qty_total ?? 0) === 0
                                     && $pendingCount <= 0;
                             @endphp
-                            <tr class="transition-colors hover:bg-indigo-50 {{ ($invoice->status ?? '') === 'draft' ? 'cursor-pointer' : '' }}" data-po-editable="{{ ($invoice->status ?? '') === 'draft' ? '1' : '0' }}" data-input-po-href="{{ route('invoices.input_po_by_no', ['invoiceNo' => $invoice->invoice_no]) }}" data-invoice-no-str="{{ $invoice->invoice_no }}" data-invoice-id="{{ $invoice->id }}" data-invoice-no="{{ (int) preg_replace('/\D+/', '', (string) $invoice->invoice_no) }}">
+                            <tr class="transition-colors hover:bg-indigo-50 {{ $isAdmin && ($invoice->status ?? '') === 'draft' ? 'cursor-pointer' : '' }}" data-po-editable="{{ $isAdmin && ($invoice->status ?? '') === 'draft' ? '1' : '0' }}" data-input-po-href="{{ route('invoices.input_po_by_no', ['invoiceNo' => $invoice->invoice_no]) }}" data-invoice-no-str="{{ $invoice->invoice_no }}" data-invoice-id="{{ $invoice->id }}" data-invoice-no="{{ (int) preg_replace('/\D+/', '', (string) $invoice->invoice_no) }}">
                                 <td class="px-4 py-3 text-slate-700">{{ optional($invoice->date)->format('d/m/Y') }}</td>
                                 <td class="px-4 py-3">
                                     <span class="inline-flex items-center justify-center rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-700">{{ $invoice->invoice_no }}</span>
@@ -143,25 +151,27 @@
                                 <td class="px-4 py-3 text-slate-500">{{ $invoice->po_no ?? '-' }}</td>
                                 <td class="px-4 py-3 text-slate-500">{{ $invoice->grand_total > 0 ? 'Rp ' . number_format($invoice->grand_total, 0, ',', '.') : '-' }}</td>
                                 <td class="px-4 py-3 text-slate-500">{{ $invoice->qty_total > 0 ? $invoice->qty_total : '-' }}</td>
-                                <td class="px-4 py-3 text-center">
-                                    <form action="{{ route('invoices.destroy', $invoice) }}" method="POST" onsubmit="return {{ $isEmpty ? "confirm('Hapus invoice ini?')" : 'false' }}" class="inline-flex">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" data-action="delete-invoice" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border {{ $isEmpty ? 'border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100' : 'border-slate-200 bg-slate-50 text-slate-400 cursor-not-allowed' }}" aria-label="Hapus" {{ $isEmpty ? '' : 'disabled' }}>
-                                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4">
-                                                <path d="M3 6H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                                                <path d="M8 6V4H16V6" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                                                <path d="M19 6L18 20H6L5 6" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                                                <path d="M10 11V17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                                                <path d="M14 11V17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                                            </svg>
-                                        </button>
-                                    </form>
-                                </td>
+                                @if($isAdmin)
+                                    <td class="px-4 py-3 text-center">
+                                        <form action="{{ route('invoices.destroy', $invoice) }}" method="POST" onsubmit="return {{ $isEmpty ? "confirm('Hapus invoice ini?')" : 'false' }}" class="inline-flex">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" data-action="delete-invoice" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border {{ $isEmpty ? 'border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100' : 'border-slate-200 bg-slate-50 text-slate-400 cursor-not-allowed' }}" aria-label="Hapus" {{ $isEmpty ? '' : 'disabled' }}>
+                                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4">
+                                                    <path d="M3 6H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                                    <path d="M8 6V4H16V6" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                                                    <path d="M19 6L18 20H6L5 6" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                                                    <path d="M10 11V17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                                    <path d="M14 11V17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                                </svg>
+                                            </button>
+                                        </form>
+                                    </td>
+                                @endif
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="px-4 py-6 text-center text-sm text-slate-500">Belum ada data invoice.</td>
+                                <td colspan="{{ $isAdmin ? 7 : 6 }}" class="px-4 py-6 text-center text-sm text-slate-500">Belum ada data invoice.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -179,6 +189,9 @@
             });
 
             document.addEventListener('dblclick', function (e) {
+                const isAdmin = {{ $isAdmin ? 'true' : 'false' }};
+                if (!isAdmin) return;
+
                 const actionArea = e.target.closest('button, a, form, [data-action], [data-open-modal], [data-close-modal]');
                 if (actionArea) return;
 
@@ -198,65 +211,67 @@
         })();
     </script>
 
-    <div id="modal-tambah-invoice" data-modal class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 p-4">
-        <div class="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-xl">
-            <div class="bg-indigo-600 px-6 py-5">
-                <div class="text-lg font-semibold text-white">Pilih Customer untuk Tambah No Invoice</div>
-                <div class="mt-1 text-sm text-indigo-100">Customer wajib dipilih sebelum melanjutkan</div>
-            </div>
-
-            <form action="{{ route('invoices.store') }}" method="POST" class="space-y-4 px-6 py-6">
-                @csrf
-                <div class="space-y-2">
-                    <label class="text-sm font-semibold text-slate-700">Customer</label>
-                    <select name="customer_id" class="h-11 w-full rounded-xl border border-indigo-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
-                        <option value="">-- Pilih Customer --</option>
-                        @foreach($customers ?? [] as $customer)
-                            <option value="{{ $customer->id }}">{{ $customer->name }}</option>
-                        @endforeach
-                    </select>
+    @if($isAdmin)
+        <div id="modal-tambah-invoice" data-modal class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 p-4">
+            <div class="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-xl">
+                <div class="bg-indigo-600 px-6 py-5">
+                    <div class="text-lg font-semibold text-white">Pilih Customer untuk Tambah No Invoice</div>
+                    <div class="mt-1 text-sm text-indigo-100">Customer wajib dipilih sebelum melanjutkan</div>
                 </div>
 
-                <div class="flex items-center justify-end gap-2 pt-2">
-                    <button type="button" data-close-modal="modal-tambah-invoice" class="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">Batal</button>
-                    <button type="submit" class="inline-flex h-10 items-center justify-center rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white hover:bg-indigo-700">Lanjut</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div id="modal-atur-invoice" data-modal class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 p-4">
-        <div class="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-xl">
-            <div class="bg-amber-500 px-6 py-5">
-                <div class="text-lg font-semibold text-white">Pilih Customer untuk Atur No Invoice</div>
-                <div class="mt-1 text-sm text-amber-100">Customer wajib dipilih sebelum melanjutkan</div>
-            </div>
-
-            <div class="space-y-4 px-6 py-6">
-                <div class="space-y-2">
-                    <label class="text-sm font-semibold text-slate-700">Customer</label>
-                    <select data-atur-invoice-customer class="h-11 w-full rounded-xl border border-amber-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-amber-400 focus:ring-4 focus:ring-amber-100">
-                        <option value="">-- Pilih Customer --</option>
-                        @foreach($customers ?? [] as $customer)
-                            <option value="{{ $customer->id }}" data-name="{{ $customer->name }}">{{ $customer->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="space-y-2">
-                    <label class="text-sm font-semibold text-slate-700">No Invoice Berikutnya</label>
-                    <div class="relative">
-                        <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">#</span>
-                        <input data-atur-invoice-next type="number" value="1000" class="h-11 w-full rounded-xl border border-slate-200 bg-white pl-8 pr-3 text-sm text-slate-700 outline-none focus:border-amber-400 focus:ring-4 focus:ring-amber-100" />
+                <form action="{{ route('invoices.store') }}" method="POST" class="space-y-4 px-6 py-6">
+                    @csrf
+                    <div class="space-y-2">
+                        <label class="text-sm font-semibold text-slate-700">Customer</label>
+                        <select name="customer_id" class="h-11 w-full rounded-xl border border-indigo-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
+                            <option value="">-- Pilih Customer --</option>
+                            @foreach($customers ?? [] as $customer)
+                                <option value="{{ $customer->id }}">{{ $customer->name }}</option>
+                            @endforeach
+                        </select>
                     </div>
-                    <div class="text-xs text-slate-500">Contoh: 1000, 2000, 5000</div>
+
+                    <div class="flex items-center justify-end gap-2 pt-2">
+                        <button type="button" data-close-modal="modal-tambah-invoice" class="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">Batal</button>
+                        <button type="submit" class="inline-flex h-10 items-center justify-center rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white hover:bg-indigo-700">Lanjut</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div id="modal-atur-invoice" data-modal class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 p-4">
+            <div class="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-xl">
+                <div class="bg-amber-500 px-6 py-5">
+                    <div class="text-lg font-semibold text-white">Pilih Customer untuk Atur No Invoice</div>
+                    <div class="mt-1 text-sm text-amber-100">Customer wajib dipilih sebelum melanjutkan</div>
                 </div>
 
-                <div class="flex items-center justify-end gap-2 pt-2">
-                    <button type="button" data-close-modal="modal-atur-invoice" class="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">Batal</button>
-                    <button id="btn-atur-invoice-lanjut" type="button" class="inline-flex h-10 items-center justify-center rounded-xl bg-amber-500 px-4 text-sm font-semibold text-white hover:bg-amber-600">Lanjut</button>
+                <div class="space-y-4 px-6 py-6">
+                    <div class="space-y-2">
+                        <label class="text-sm font-semibold text-slate-700">Customer</label>
+                        <select data-atur-invoice-customer class="h-11 w-full rounded-xl border border-amber-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-amber-400 focus:ring-4 focus:ring-amber-100">
+                            <option value="">-- Pilih Customer --</option>
+                            @foreach($customers ?? [] as $customer)
+                                <option value="{{ $customer->id }}" data-name="{{ $customer->name }}">{{ $customer->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-sm font-semibold text-slate-700">No Invoice Berikutnya</label>
+                        <div class="relative">
+                            <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">#</span>
+                            <input data-atur-invoice-next type="number" value="1000" class="h-11 w-full rounded-xl border border-slate-200 bg-white pl-8 pr-3 text-sm text-slate-700 outline-none focus:border-amber-400 focus:ring-4 focus:ring-amber-100" />
+                        </div>
+                        <div class="text-xs text-slate-500">Contoh: 1000, 2000, 5000</div>
+                    </div>
+
+                    <div class="flex items-center justify-end gap-2 pt-2">
+                        <button type="button" data-close-modal="modal-atur-invoice" class="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">Batal</button>
+                        <button id="btn-atur-invoice-lanjut" type="button" class="inline-flex h-10 items-center justify-center rounded-xl bg-amber-500 px-4 text-sm font-semibold text-white hover:bg-amber-600">Lanjut</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    @endif
 @endsection

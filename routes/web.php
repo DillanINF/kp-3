@@ -26,31 +26,36 @@ Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->n
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    Route::get('/reports', [ReportController::class, 'index'])->middleware('role:admin,manager')->name('reports.index');
+    Route::get('/reports', [ReportController::class, 'index'])->middleware('role:admin,manager,user')->name('reports.index');
+
+    Route::get('/reports/pdf', [ReportController::class, 'pdf'])->middleware('role:admin,manager,user')->name('reports.pdf');
 
     Route::prefix('invoices')->name('invoices.')->group(function () {
         Route::get('/', [InvoiceController::class, 'index'])->name('index');
 
-        Route::post('/', [InvoiceController::class, 'store'])->name('store');
+        Route::post('/', [InvoiceController::class, 'store'])->middleware('role:admin')->name('store');
 
-        Route::post('/{invoice}/accept', [InvoiceController::class, 'accept'])->name('accept');
+        Route::post('/{invoice}/accept', [InvoiceController::class, 'accept'])->middleware('role:admin')->name('accept');
 
-        Route::delete('/{invoice}', [InvoiceController::class, 'destroy'])->name('destroy');
+        Route::delete('/{invoice}', [InvoiceController::class, 'destroy'])->middleware('role:admin')->name('destroy');
 
-        Route::get('/by-no/{invoiceNo}/input-po', [InvoiceController::class, 'inputPoByNo'])->name('input_po_by_no');
+        Route::get('/by-no/{invoiceNo}/input-po', [InvoiceController::class, 'inputPoByNo'])->middleware('role:admin')->name('input_po_by_no');
 
-        Route::get('/{invoice}/input-po', [InvoiceController::class, 'inputPo'])->name('input_po');
-        Route::post('/{invoice}/input-po', [InvoiceController::class, 'storePo'])->name('input_po.store');
+        Route::get('/{invoice}/input-po', [InvoiceController::class, 'inputPo'])->middleware('role:admin')->name('input_po');
+        Route::post('/{invoice}/input-po', [InvoiceController::class, 'storePo'])->middleware('role:admin')->name('input_po.store');
 
         Route::get('/po-belum-terkirim', [InvoiceController::class, 'poPending'])->name('po_pending');
 
         Route::post('/po-belum-terkirim/{pending}/fulfill', [InvoiceController::class, 'fulfillPoPending'])
+            ->middleware('role:admin')
             ->name('po_pending.fulfill');
 
         Route::put('/po-belum-terkirim/{pending}', [InvoiceController::class, 'updatePoPending'])
+            ->middleware('role:admin')
             ->name('po_pending.update');
 
         Route::delete('/po-belum-terkirim/{pending}', [InvoiceController::class, 'destroyPoPending'])
+            ->middleware('role:admin')
             ->name('po_pending.destroy');
     });
 
@@ -94,5 +99,5 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/settings', function () {
         return view('settings');
-    })->name('settings');
+    })->middleware('role:admin')->name('settings');
 });

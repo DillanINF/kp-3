@@ -24,6 +24,10 @@
                 </div>
             </form>
 
+            <div class="mt-3 flex justify-end">
+                <a href="{{ route('reports.pdf', ['from' => request()->query('from'), 'to' => request()->query('to')]) }}" class="inline-flex h-11 items-center justify-center rounded-md border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">Cetak PDF</a>
+            </div>
+
             <div class="mt-5 grid grid-cols-1 gap-3 md:grid-cols-4">
                 <div class="rounded-lg border border-slate-200 bg-white p-4">
                     <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">Omzet Penjualan</div>
@@ -53,14 +57,9 @@
                     <div class="mt-1 text-lg font-semibold text-slate-900">Rp {{ number_format($lossExpired ?? 0, 0, ',', '.') }}</div>
                 </div>
                 <div class="rounded-lg border border-slate-200 bg-white p-4">
-                    <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">Kerugian Lainnya</div>
-                    <div class="mt-1 text-lg font-semibold text-slate-900">Rp {{ number_format($lossOther ?? 0, 0, ',', '.') }}</div>
+                    <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">Net</div>
+                    <div class="mt-1 text-lg font-semibold text-slate-900">Rp {{ number_format($net ?? 0, 0, ',', '.') }}</div>
                 </div>
-            </div>
-
-            <div class="mt-3 rounded-lg border border-slate-200 bg-white p-4">
-                <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">Net</div>
-                <div class="mt-1 text-lg font-semibold text-slate-900">Rp {{ number_format($net ?? 0, 0, ',', '.') }}</div>
             </div>
 
             <div class="mt-6 overflow-x-auto">
