@@ -64,7 +64,7 @@
                                 @if(auth()->user()?->role === 'admin')
                                     <form action="{{ route('masters.items_supplier.send', ['supplierRequest' => $req->id]) }}" method="POST" onsubmit="return confirm('Kirim permintaan ini ke supplier?')">
                                         @csrf
-                                        <button type="submit" class="inline-flex h-9 items-center justify-center rounded-md border border-indigo-200 bg-indigo-50 px-3 text-xs font-semibold text-indigo-700 hover:bg-indigo-100">
+                                        <button type="submit" @disabled($req->status === 'accepted') class="inline-flex h-9 items-center justify-center rounded-md border border-indigo-200 bg-indigo-50 px-3 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-indigo-50">
                                             Send
                                         </button>
                                     </form>

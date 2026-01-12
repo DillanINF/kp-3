@@ -209,6 +209,10 @@ class SupplierRequestController extends Controller
 
     public function send(SupplierRequest $supplierRequest)
     {
+        if ($supplierRequest->status === 'accepted') {
+            return redirect()->route('masters.items_supplier', ['supplier_id' => $supplierRequest->supplier_id]);
+        }
+
         $supplierRequest->loadMissing(['supplier', 'items' => fn ($q) => $q->with('item')]);
 
         $email = $supplierRequest->supplier?->email;
