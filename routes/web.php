@@ -25,13 +25,13 @@ Route::middleware('guest')->group(function () {
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->middleware('role:admin,manager')->name('dashboard');
 
-    Route::get('/reports', [ReportController::class, 'index'])->middleware('role:admin,manager,user')->name('reports.index');
+    Route::get('/reports', [ReportController::class, 'index'])->middleware('role:admin,manager')->name('reports.index');
 
-    Route::get('/reports/pdf', [ReportController::class, 'pdf'])->middleware('role:admin,manager,user')->name('reports.pdf');
+    Route::get('/reports/pdf', [ReportController::class, 'pdf'])->middleware('role:admin,manager')->name('reports.pdf');
 
-    Route::prefix('invoices')->name('invoices.')->group(function () {
+    Route::prefix('invoices')->name('invoices.')->middleware('role:admin,manager')->group(function () {
         Route::get('/', [InvoiceController::class, 'index'])->name('index');
 
         Route::post('/', [InvoiceController::class, 'store'])->middleware('role:admin')->name('store');
@@ -60,7 +60,7 @@ Route::middleware('auth')->group(function () {
             ->name('po_pending.destroy');
     });
 
-    Route::prefix('masters')->name('masters.')->group(function () {
+    Route::prefix('masters')->name('masters.')->middleware('role:admin,manager')->group(function () {
         Route::get('/customers', [CustomerController::class, 'index'])->name('customers');
         Route::post('/customers', [CustomerController::class, 'store'])->middleware('role:admin')->name('customers.store');
         Route::put('/customers/{customer}', [CustomerController::class, 'update'])->middleware('role:admin')->name('customers.update');
@@ -101,4 +101,5 @@ Route::middleware('auth')->group(function () {
     Route::get('/settings', [SettingsController::class, 'index'])->middleware('role:admin,manager')->name('settings');
     Route::post('/settings/profile', [SettingsController::class, 'updateProfile'])->middleware('role:admin,manager')->name('settings.profile.update');
     Route::post('/settings/password', [SettingsController::class, 'updatePassword'])->middleware('role:admin,manager')->name('settings.password.update');
+    Route::post('/settings/manager', [SettingsController::class, 'storeManager'])->middleware('role:admin')->name('settings.manager.store');
 });

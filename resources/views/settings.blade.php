@@ -5,12 +5,15 @@
 @section('page_description')Pengaturan umum aplikasi.@endsection
 
 @section('content')
-    @php($tab = in_array(request('tab'), ['profil', 'password'], true) ? request('tab') : 'profil')
+    @php($tab = in_array(request('tab'), ['profil', 'password', 'manager'], true) ? request('tab') : 'profil')
     <div class="grid grid-cols-1 gap-4 xl:grid-cols-12">
         <div class="xl:col-span-3">
             <div class="rounded-xl border border-slate-200 bg-white p-2">
                 <a href="{{ route('settings', ['tab' => 'profil']) }}" class="block rounded-lg px-3 py-2 text-sm font-semibold transition-colors {{ $tab === 'profil' ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-100' }}">Profil</a>
                 <a href="{{ route('settings', ['tab' => 'password']) }}" class="mt-1 block rounded-lg px-3 py-2 text-sm font-semibold transition-colors {{ $tab === 'password' ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-100' }}">Ganti Password</a>
+                @if(auth()->user()?->role === 'admin')
+                    <a href="{{ route('settings', ['tab' => 'manager']) }}" class="mt-1 block rounded-lg px-3 py-2 text-sm font-semibold transition-colors {{ $tab === 'manager' ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-100' }}">Buat Akun Manager</a>
+                @endif
             </div>
         </div>
 
@@ -28,7 +31,41 @@
                     </div>
                 @endif
 
-                @if($tab === 'password')
+                @if($tab === 'manager' && auth()->user()?->role === 'admin')
+                    <div class="text-sm font-semibold text-slate-900">Buat Akun Manager</div>
+                    <div class="mt-1 text-xs text-slate-500">Buat akun manager baru untuk mengakses fitur aplikasi sesuai role manager.</div>
+                    <form class="mt-4 space-y-3" method="POST" action="{{ route('settings.manager.store') }}">
+                        @csrf
+                        <div>
+                            <label class="text-sm font-medium text-slate-700">Nama</label>
+                            <input name="name" type="text" value="{{ old('name') }}" class="mt-1 w-full rounded-md border bg-white px-3 py-2 text-sm text-slate-700 {{ $errors->has('name') ? 'border-rose-300' : 'border-slate-200' }}" />
+                            @error('name')
+                                <div class="mt-1 text-xs text-rose-600">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium text-slate-700">Email</label>
+                            <input name="email" type="email" value="{{ old('email') }}" class="mt-1 w-full rounded-md border bg-white px-3 py-2 text-sm text-slate-700 {{ $errors->has('email') ? 'border-rose-300' : 'border-slate-200' }}" />
+                            @error('email')
+                                <div class="mt-1 text-xs text-rose-600">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium text-slate-700">Password</label>
+                            <input name="password" type="password" class="mt-1 w-full rounded-md border bg-white px-3 py-2 text-sm text-slate-700 {{ $errors->has('password') ? 'border-rose-300' : 'border-slate-200' }}" />
+                            @error('password')
+                                <div class="mt-1 text-xs text-rose-600">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium text-slate-700">Konfirmasi password</label>
+                            <input name="password_confirmation" type="password" class="mt-1 w-full rounded-md border bg-white px-3 py-2 text-sm text-slate-700 {{ $errors->has('password') ? 'border-rose-300' : 'border-slate-200' }}" />
+                        </div>
+                        <div class="pt-2">
+                            <button type="submit" class="inline-flex items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">Buat Akun</button>
+                        </div>
+                    </form>
+                @elseif($tab === 'password')
                     <div class="text-sm font-semibold text-slate-900">Ganti Password</div>
                     <div class="mt-1 text-xs text-slate-500">Gunakan minimal 8 karakter dan jangan gunakan password yang mudah ditebak.</div>
                     <form class="mt-4 space-y-3" method="POST" action="{{ route('settings.password.update', ['tab' => 'password']) }}">

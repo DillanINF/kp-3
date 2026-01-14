@@ -8,7 +8,7 @@
 
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
-
+        <link rel="icon" href="/LOGO.png"/>
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
 
@@ -33,7 +33,7 @@
                             </label>
 
                             <div class="min-w-0">
-                                <div class="text-sm font-semibold text-slate-900">{{ config('app.name', 'Company Manager') }}</div>
+                                <div class="text-sm font-semibold text-slate-900">Aplikasi</div>
                                 <div class="text-xs text-slate-500">@yield('subtitle', 'Manajemen perusahaan')</div>
                             </div>
                         </div>

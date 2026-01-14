@@ -14,6 +14,27 @@
     cursor: pointer;
 }
 
+:where(
+    a[href],
+    button:not(:disabled),
+    input:is([type='button'], [type='submit'], [type='reset']):not(:disabled),
+    summary,
+    [role='button']:not([aria-disabled='true']),
+    [onclick],
+    [data-action],
+    [tabindex]:not([tabindex='-1'])
+) {
+    cursor: pointer;
+}
+
+:where(
+    button:disabled,
+    input:is([type='button'], [type='submit'], [type='reset']):disabled,
+    [role='button'][aria-disabled='true']
+) {
+    cursor: not-allowed;
+}
+
 .sidebar-link:hover {
     background-color: rgb(226 232 240);
     color: rgb(15 23 42);

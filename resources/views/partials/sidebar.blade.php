@@ -1,8 +1,7 @@
 <div class="flex h-full flex-col">
     <div class="flex items-center justify-between border-b border-slate-200 px-4 py-4">
-        <div class="min-w-0">
-            <div class="text-sm font-semibold text-slate-900">{{ config('app.name', 'Company Manager') }}</div>
-            <div class="text-xs text-slate-500">Panel</div>
+        <div class="flex w-full items-center justify-center">
+            <img src="{{ asset('image.png') }}" alt="{{ config('app.name', 'Company Manager') }}" class="h-10 w-auto max-w-full" />
         </div>
     </div>
 
