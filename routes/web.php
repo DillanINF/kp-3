@@ -102,4 +102,5 @@ Route::middleware('auth')->group(function () {
     Route::post('/settings/profile', [SettingsController::class, 'updateProfile'])->middleware('role:admin,manager')->name('settings.profile.update');
     Route::post('/settings/password', [SettingsController::class, 'updatePassword'])->middleware('role:admin,manager')->name('settings.password.update');
     Route::post('/settings/manager', [SettingsController::class, 'storeManager'])->middleware('role:admin')->name('settings.manager.store');
+    Route::delete('/settings/manager/{user}', [SettingsController::class, 'destroyManager'])->middleware('role:admin')->name('settings.manager.destroy');
 });

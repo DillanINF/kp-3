@@ -10,7 +10,18 @@ class SettingsController extends Controller
 {
     public function index(Request $request)
     {
-        return view('settings');
+        $managers = collect();
+
+        if ($request->user()?->role === 'admin') {
+            $managers = User::query()
+                ->where('role', 'manager')
+                ->orderBy('name')
+                ->get();
+        }
+
+        return view('settings', [
+            'managers' => $managers,
+        ]);
     }
 
     public function updateProfile(Request $request)
@@ -70,7 +81,30 @@ class SettingsController extends Controller
         ]);
 
         return redirect()
-            ->route('settings', ['tab' => 'manager'])
+            ->route('settings', ['tab' => 'manager-create'])
             ->with('success', 'Akun manager berhasil dibuat.');
+    }
+
+    public function destroyManager(Request $request, User $user)
+    {
+        if ($request->user()?->role !== 'admin') {
+            abort(403);
+        }
+
+        if ($user->role !== 'manager') {
+            abort(404);
+        }
+
+        if ($request->user()?->id === $user->id) {
+            return redirect()
+                ->route('settings', ['tab' => 'manager-list'])
+                ->withErrors(['manager' => 'Kamu tidak bisa menghapus akun yang sedang digunakan.']);
+        }
+
+        $user->delete();
+
+        return redirect()
+            ->route('settings', ['tab' => 'manager-list'])
+            ->with('success', 'Akun manager berhasil dihapus.');
     }
 }
