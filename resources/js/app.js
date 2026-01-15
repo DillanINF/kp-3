@@ -75,7 +75,7 @@ document.addEventListener('click', (e) => {
             const unitEl = document.querySelector('#modal-tambah-item [name="unit"]');
             const priceEl = document.querySelector('#modal-tambah-item [name="price"]');
             if (nameEl) nameEl.value = '';
-            if (unitEl) unitEl.value = 'pcs';
+            if (unitEl) unitEl.value = 'qty';
             if (priceEl) priceEl.value = '0';
         }
 
@@ -645,7 +645,7 @@ document.addEventListener('click', (e) => {
         if (nameEl) nameEl.value = '';
 
         const unitEl = document.querySelector('[data-add-supplier-item-unit]');
-        if (unitEl) unitEl.value = 'pcs';
+        if (unitEl) unitEl.value = 'qty';
 
         const priceEl = document.querySelector('[data-add-supplier-item-buy-price]');
         if (priceEl) priceEl.value = '';

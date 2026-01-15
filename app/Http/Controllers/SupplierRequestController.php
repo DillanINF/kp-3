@@ -215,7 +215,8 @@ class SupplierRequestController extends Controller
 
         $supplierRequest->loadMissing(['supplier', 'items' => fn ($q) => $q->with('item')]);
 
-        $email = $supplierRequest->supplier?->email;
+        $forcedTo = config('mail.force_to');
+        $email = $forcedTo ?: $supplierRequest->supplier?->email;
         if ($email) {
             Mail::to($email)->send(new SupplierRequestSent($supplierRequest));
         }

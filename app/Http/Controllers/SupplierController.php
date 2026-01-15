@@ -50,7 +50,7 @@ class SupplierController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'unit' => ['required', 'string', 'in:pcs,qty'],
+            'unit' => ['required', 'string', 'in:qty'],
             'buy_price' => ['nullable', 'integer', 'min:0'],
         ]);
 

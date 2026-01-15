@@ -115,4 +115,6 @@ return [
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
 
+    'force_to' => env('MAIL_FORCE_TO'),
+
 ];
