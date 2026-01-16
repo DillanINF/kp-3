@@ -240,11 +240,6 @@
                     </div>
 
                     <div class="space-y-2">
-                        <label class="text-sm font-semibold text-slate-700">Kontak</label>
-                        <input name="contact_name" value="{{ old('contact_name') }}" type="text" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100" />
-                    </div>
-
-                    <div class="space-y-2">
                         <label class="text-sm font-semibold text-slate-700">Telepon</label>
                         <input name="phone" value="{{ old('phone') }}" type="text" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100" />
                     </div>
