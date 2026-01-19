@@ -58,7 +58,7 @@
                             <td class="px-4 py-3 text-slate-700">Rp {{ number_format($unitPrice, 0, ',', '.') }}</td>
                             <td class="px-4 py-3 text-slate-700">Rp {{ number_format($req->total_amount ?? 0, 0, ',', '.') }}</td>
                             <td class="px-4 py-3">
-                                @if(auth()->user()?->role === 'admin' && $req->status !== 'accepted')
+                                @if(in_array(auth()->user()?->role, ['admin', 'manager'], true) && $req->status !== 'accepted')
                                     <form action="{{ route('masters.items_supplier.accept', ['supplierRequest' => $req->id]) }}" method="POST" onsubmit="return confirm('Terima barang dari supplier? Stok akan bertambah dan tercatat di Barang Masuk.')">
                                         @csrf
                                         <button type="submit" class="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800 hover:bg-amber-200">TERIMA BARANG</button>
@@ -110,7 +110,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="{{ auth()->user()?->role === 'admin' ? 9 : 8 }}" class="px-4 py-6 text-center text-sm text-slate-500">Belum ada permintaan barang supplier.</td>
+                            <td colspan="{{ auth()->user()?->role === 'admin' ? 10 : 9 }}" class="px-4 py-6 text-center text-sm text-slate-500">Belum ada permintaan barang supplier.</td>
                         </tr>
                     @endforelse
                 </tbody>

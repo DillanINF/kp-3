@@ -35,6 +35,8 @@ class DashboardController extends Controller
         $itemsCount = Item::query()->where('item_type', 'regular')->count();
 
         $goodsOutTotalQty = (int) (ItemOut::query()->sum('qty') ?? 0);
+        $goodsOutSalesQty = (int) (ItemOut::query()->where('type', 'sale')->sum('qty') ?? 0);
+        $goodsOutLossQty = (int) (ItemOut::query()->whereIn('type', ['damaged', 'expired', 'other'])->sum('qty') ?? 0);
         $goodsInTotalQty = (int) (ItemIn::query()->sum('qty') ?? 0);
 
         $profitTotal = (int) (ItemOut::query()
@@ -111,6 +113,8 @@ class DashboardController extends Controller
             'suppliersCount' => $suppliersCount,
             'itemsCount' => $itemsCount,
             'goodsOutTotalQty' => $goodsOutTotalQty,
+            'goodsOutSalesQty' => $goodsOutSalesQty,
+            'goodsOutLossQty' => $goodsOutLossQty,
             'goodsInTotalQty' => $goodsInTotalQty,
             'activities' => $activities,
         ]);

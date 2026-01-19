@@ -29,14 +29,34 @@ class ItemInController extends Controller
                 ->all())
             ->all();
 
+        $supplierPriceMap = SupplierItem::query()
+            ->select(['supplier_id', 'item_id', 'buy_price'])
+            ->get()
+            ->groupBy('supplier_id')
+            ->map(fn ($rows) => $rows
+                ->mapWithKeys(fn ($si) => [(int) $si->item_id => (int) ($si->buy_price ?? 0)])
+                ->all())
+            ->all();
+
         $items = Item::query()->orderBy('name')->get();
         $history = ItemIn::query()->with(['supplier', 'item'])->orderByDesc('date')->orderByDesc('id')->get();
+
+        $historyGrandTotal = 0;
+        foreach ($history as $row) {
+            $supplierId = (int) ($row->supplier_id ?? 0);
+            $itemId = (int) ($row->item_id ?? 0);
+            $price = (int) ($supplierPriceMap[$supplierId][$itemId] ?? 0);
+            $qty = (int) ($row->qty ?? 0);
+            $historyGrandTotal += ($price * $qty);
+        }
 
         return view('masters.items_in', [
             'suppliers' => $suppliers,
             'items' => $items,
             'itemsBySupplier' => $itemsBySupplier,
             'history' => $history,
+            'supplierPriceMap' => $supplierPriceMap,
+            'historyGrandTotal' => $historyGrandTotal,
         ]);
     }
 

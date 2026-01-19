@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Customer;
 use App\Models\Item;
 use App\Models\ItemOut;
+use App\Models\Invoice;
 use App\Models\SupplierItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -12,16 +13,43 @@ use Illuminate\Validation\ValidationException;
 
 class ItemOutController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $customers = Customer::query()->orderBy('name')->get();
         $items = Item::query()->where('item_type', 'regular')->orderBy('name')->get();
-        $history = ItemOut::query()->with(['customer', 'item'])->orderByDesc('date')->orderByDesc('id')->get();
+        $year = (int) ($request->query('year') ?? now()->year);
+        $month = (int) ($request->query('month') ?? now()->month);
+        if ($year < 2000) $year = (int) now()->year;
+        if ($month < 1 || $month > 12) $month = (int) now()->month;
+
+        $periodStart = now()->setDate($year, $month, 1)->startOfDay();
+        $periodEnd = now()->setDate($year, $month, 1)->endOfMonth()->endOfDay();
+
+        $history = ItemOut::query()
+            ->with(['customer', 'item'])
+            ->whereBetween('date', [$periodStart->toDateString(), $periodEnd->toDateString()])
+            ->orderByDesc('date')
+            ->orderByDesc('id')
+            ->get();
+
+        $salesInvoices = Invoice::query()
+            ->with(['customer', 'details.item'])
+            ->where('status', 'posted')
+            ->whereBetween('created_at', [$periodStart, $periodEnd])
+            ->orderByDesc('date')
+            ->orderByDesc('id')
+            ->get();
+
+        $years = range((int) now()->year, (int) now()->year - 5);
 
         return view('masters.items_out', [
             'customers' => $customers,
             'items' => $items,
+            'salesInvoices' => $salesInvoices,
             'history' => $history,
+            'selectedYear' => $year,
+            'selectedMonth' => $month,
+            'years' => $years,
         ]);
     }
 

@@ -83,7 +83,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/items-supplier', [SupplierRequestController::class, 'store'])->middleware('role:admin')->name('items_supplier.store');
         Route::put('/items-supplier/{supplierRequest}', [SupplierRequestController::class, 'update'])->middleware('role:admin')->name('items_supplier.update');
         Route::post('/items-supplier/{supplierRequest}/send', [SupplierRequestController::class, 'send'])->middleware('role:admin')->name('items_supplier.send');
-        Route::post('/items-supplier/{supplierRequest}/accept', [SupplierRequestController::class, 'accept'])->middleware('role:admin')->name('items_supplier.accept');
+        Route::post('/items-supplier/{supplierRequest}/accept', [SupplierRequestController::class, 'accept'])->middleware('role:admin,manager')->name('items_supplier.accept');
         Route::delete('/items-supplier/{supplierRequest}', [SupplierRequestController::class, 'destroy'])->middleware('role:admin')->name('items_supplier.destroy');
         Route::post('/items', [ItemController::class, 'store'])->middleware('role:admin')->name('items.store');
         Route::put('/items/{item}', [ItemController::class, 'update'])->middleware('role:admin')->name('items.update');

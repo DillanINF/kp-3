@@ -5,52 +5,79 @@
 @section('page_description')Ringkasan kinerja dan aktivitas terbaru.@endsection
 
 @section('content')
-    <div data-dashboard class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <a href="{{ route('invoices.index') }}" class="rounded-xl border border-slate-200 bg-white p-4 hover:bg-slate-50">
-            <div class="text-sm text-slate-500">Invoice</div>
-            <div class="mt-2 text-2xl font-semibold text-slate-900">{{ $invoicesCount ?? 0 }}</div>
-            <div class="mt-1 text-xs text-slate-500">Total data invoice</div>
-        </a>
-        <a href="{{ route('masters.items_supplier') }}" class="rounded-xl border border-slate-200 bg-white p-4 hover:bg-slate-50">
-            <div class="text-sm text-slate-500">Pengeluaran</div>
-            <div class="mt-2 text-2xl font-semibold text-slate-900">Rp {{ number_format($expenseTotal ?? 0, 0, ',', '.') }}</div>
-            <div class="mt-1 text-xs text-slate-500">Total pemesanan supplier (accepted)</div>
-        </a>
-        <a href="{{ route('invoices.index') }}" class="rounded-xl border border-slate-200 bg-white p-4 hover:bg-slate-50">
-            <div class="text-sm text-slate-500">Pendapatan</div>
-            <div class="mt-2 text-2xl font-semibold text-slate-900">Rp {{ number_format($revenueTotal ?? 0, 0, ',', '.') }}</div>
-            <div class="mt-1 text-xs text-slate-500">Total invoice posted</div>
-        </a>
-        <a href="{{ route('masters.items_out') }}" class="rounded-xl border border-slate-200 bg-white p-4 hover:bg-slate-50">
-            <div class="text-sm text-slate-500">Keuntungan</div>
-            <div class="mt-2 text-2xl font-semibold text-slate-900">Rp {{ number_format($profitTotal ?? 0, 0, ',', '.') }}</div>
-            <div class="mt-1 text-xs text-slate-500">(Harga jual - harga beli) x qty terjual</div>
-        </a>
-        <a href="{{ route('masters.items') }}" class="rounded-xl border border-slate-200 bg-white p-4 hover:bg-slate-50">
-            <div class="text-sm text-slate-500">Data barang</div>
-            <div class="mt-2 text-2xl font-semibold text-slate-900">{{ $itemsCount ?? 0 }}</div>
-            <div class="mt-1 text-xs text-slate-500">Jumlah jenis barang</div>
-        </a>
-        <a href="{{ route('masters.items_out') }}" class="rounded-xl border border-slate-200 bg-white p-4 hover:bg-slate-50">
-            <div class="text-sm text-slate-500">Barang keluar</div>
-            <div class="mt-2 text-2xl font-semibold text-slate-900">{{ $goodsOutTotalQty ?? 0 }}</div>
-            <div class="mt-1 text-xs text-slate-500">Total qty keluar</div>
-        </a>
-        <a href="{{ route('masters.items_in') }}" class="rounded-xl border border-slate-200 bg-white p-4 hover:bg-slate-50">
-            <div class="text-sm text-slate-500">Barang masuk</div>
-            <div class="mt-2 text-2xl font-semibold text-slate-900">{{ $goodsInTotalQty ?? 0 }}</div>
-            <div class="mt-1 text-xs text-slate-500">Total qty masuk</div>
-        </a>
-        <a href="{{ route('masters.customers') }}" class="rounded-xl border border-slate-200 bg-white p-4 hover:bg-slate-50">
-            <div class="text-sm text-slate-500">Data customer</div>
-            <div class="mt-2 text-2xl font-semibold text-slate-900">{{ $customersCount ?? 0 }}</div>
-            <div class="mt-1 text-xs text-slate-500">Customer terdaftar</div>
-        </a>
-        <a href="{{ route('masters.suppliers') }}" class="rounded-xl border border-slate-200 bg-white p-4 hover:bg-slate-50">
-            <div class="text-sm text-slate-500">Data supplier</div>
-            <div class="mt-2 text-2xl font-semibold text-slate-900">{{ $suppliersCount ?? 0 }}</div>
-            <div class="mt-1 text-xs text-slate-500">Supplier terdaftar</div>
-        </a>
+    <div class="space-y-4">
+        <div class="rounded-xl border border-slate-200 bg-white p-4">
+            <div class="text-sm font-semibold text-slate-900">Finansial</div>
+            <div class="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <a href="{{ route('invoices.index') }}" class="rounded-xl border border-slate-200 bg-white p-4 hover:bg-slate-50">
+                    <div class="text-sm text-slate-500">Pendapatan</div>
+                    <div class="mt-2 text-2xl font-semibold text-slate-900">Rp {{ number_format($revenueTotal ?? 0, 0, ',', '.') }}</div>
+                    <div class="mt-1 text-xs text-slate-500">Total invoice posted</div>
+                </a>
+                <a href="{{ route('masters.items_supplier') }}" class="rounded-xl border border-slate-200 bg-white p-4 hover:bg-slate-50">
+                    <div class="text-sm text-slate-500">Pengeluaran</div>
+                    <div class="mt-2 text-2xl font-semibold text-slate-900">Rp {{ number_format($expenseTotal ?? 0, 0, ',', '.') }}</div>
+                    <div class="mt-1 text-xs text-slate-500">Total pemesanan supplier (accepted)</div>
+                </a>
+                <a href="{{ route('masters.items_out') }}" class="rounded-xl border border-slate-200 bg-white p-4 hover:bg-slate-50">
+                    <div class="text-sm text-slate-500">Keuntungan</div>
+                    <div class="mt-2 text-2xl font-semibold text-slate-900">Rp {{ number_format($profitTotal ?? 0, 0, ',', '.') }}</div>
+                    <div class="mt-1 text-xs text-slate-500">(Harga jual - harga beli) x qty terjual</div>
+                </a>
+                <a href="{{ route('invoices.index') }}" class="rounded-xl border border-slate-200 bg-white p-4 hover:bg-slate-50">
+                    <div class="text-sm text-slate-500">Invoice</div>
+                    <div class="mt-2 text-2xl font-semibold text-slate-900">{{ $invoicesCount ?? 0 }}</div>
+                    <div class="mt-1 text-xs text-slate-500">Total data invoice</div>
+                </a>
+            </div>
+        </div>
+
+        <div class="rounded-xl border border-slate-200 bg-white p-4">
+            <div class="text-sm font-semibold text-slate-900">Operasional</div>
+            <div class="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <a href="{{ route('masters.items_in') }}" class="rounded-xl border border-slate-200 bg-white p-4 hover:bg-slate-50">
+                    <div class="text-sm text-slate-500">Barang masuk</div>
+                    <div class="mt-2 text-2xl font-semibold text-slate-900">{{ $goodsInTotalQty ?? 0 }}</div>
+                    <div class="mt-1 text-xs text-slate-500">Total qty masuk</div>
+                </a>
+                <a href="{{ route('masters.items_out') }}" class="rounded-xl border border-slate-200 bg-white p-4 hover:bg-slate-50">
+                    <div class="text-sm text-slate-500">Barang keluar (Penjualan)</div>
+                    <div class="mt-2 text-2xl font-semibold text-slate-900">{{ $goodsOutSalesQty ?? 0 }}</div>
+                    <div class="mt-1 text-xs text-slate-500">Qty keluar karena penjualan</div>
+                </a>
+                <a href="{{ route('masters.items_out') }}" class="rounded-xl border border-slate-200 bg-white p-4 hover:bg-slate-50">
+                    <div class="text-sm text-slate-500">Barang keluar (Kerugian)</div>
+                    <div class="mt-2 text-2xl font-semibold text-slate-900">{{ $goodsOutLossQty ?? 0 }}</div>
+                    <div class="mt-1 text-xs text-slate-500">Qty keluar karena rusak/expired/lainnya</div>
+                </a>
+                <a href="{{ route('masters.items_out') }}" class="rounded-xl border border-slate-200 bg-white p-4 hover:bg-slate-50">
+                    <div class="text-sm text-slate-500">Barang keluar (Total)</div>
+                    <div class="mt-2 text-2xl font-semibold text-slate-900">{{ $goodsOutTotalQty ?? 0 }}</div>
+                    <div class="mt-1 text-xs text-slate-500">Total qty keluar</div>
+                </a>
+            </div>
+        </div>
+
+        <div class="rounded-xl border border-slate-200 bg-white p-4">
+            <div class="text-sm font-semibold text-slate-900">Master Data</div>
+            <div class="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <a href="{{ route('masters.items') }}" class="rounded-xl border border-slate-200 bg-white p-4 hover:bg-slate-50">
+                    <div class="text-sm text-slate-500">Data barang</div>
+                    <div class="mt-2 text-2xl font-semibold text-slate-900">{{ $itemsCount ?? 0 }}</div>
+                    <div class="mt-1 text-xs text-slate-500">Jumlah jenis barang</div>
+                </a>
+                <a href="{{ route('masters.customers') }}" class="rounded-xl border border-slate-200 bg-white p-4 hover:bg-slate-50">
+                    <div class="text-sm text-slate-500">Data customer</div>
+                    <div class="mt-2 text-2xl font-semibold text-slate-900">{{ $customersCount ?? 0 }}</div>
+                    <div class="mt-1 text-xs text-slate-500">Customer terdaftar</div>
+                </a>
+                <a href="{{ route('masters.suppliers') }}" class="rounded-xl border border-slate-200 bg-white p-4 hover:bg-slate-50">
+                    <div class="text-sm text-slate-500">Data supplier</div>
+                    <div class="mt-2 text-2xl font-semibold text-slate-900">{{ $suppliersCount ?? 0 }}</div>
+                    <div class="mt-1 text-xs text-slate-500">Supplier terdaftar</div>
+                </a>
+            </div>
+        </div>
     </div>
 
     <div class="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-3">

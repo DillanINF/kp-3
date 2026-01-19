@@ -17,6 +17,14 @@ class ReportController extends Controller
         }
 
         $monthly = [];
+        $totals = [
+            'salesRevenue' => 0,
+            'salesCogs' => 0,
+            'salesProfit' => 0,
+            'lossDamaged' => 0,
+            'lossExpired' => 0,
+            'net' => 0,
+        ];
 
         for ($m = 1; $m <= 12; $m++) {
             $fromDate = Carbon::create($year, $m, 1)->startOfMonth();
@@ -58,11 +66,22 @@ class ReportController extends Controller
                 'lossExpired' => (int) $lossExpired,
                 'net' => (int) $net,
             ];
+
+            $totals['salesRevenue'] += (int) $salesRevenue;
+            $totals['salesCogs'] += (int) $salesCogs;
+            $totals['salesProfit'] += (int) $salesProfit;
+            $totals['lossDamaged'] += (int) $lossDamaged;
+            $totals['lossExpired'] += (int) $lossExpired;
+            $totals['net'] += (int) $net;
         }
+
+        $years = range((int) now()->year, (int) now()->year - 5);
 
         return view('reports.index', [
             'year' => $year,
             'monthly' => $monthly,
+            'totals' => $totals,
+            'years' => $years,
         ]);
     }
 
