@@ -33,6 +33,7 @@
                         <th class="px-4 py-3">Supplier</th>
                         <th class="px-4 py-3">Qty</th>
                         <th class="px-4 py-3">Satuan</th>
+                        <th class="px-4 py-3">Harga/QTY</th>
                         <th class="px-4 py-3">Total</th>
                         <th class="px-4 py-3">Status</th>
                         <th class="px-4 py-3">Send</th>
@@ -49,6 +50,12 @@
                             <td class="px-4 py-3 text-slate-700">{{ $req->supplier?->name ?? '-' }}</td>
                             <td class="px-4 py-3 text-slate-700">{{ $req->total_qty }}</td>
                             <td class="px-4 py-3 text-slate-700">{{ $req->units_summary ?? '-' }}</td>
+                            @php
+                                $totalQty = (int) ($req->total_qty ?? 0);
+                                $totalAmount = (int) ($req->total_amount ?? 0);
+                                $unitPrice = $totalQty > 0 ? (int) round($totalAmount / $totalQty) : 0;
+                            @endphp
+                            <td class="px-4 py-3 text-slate-700">Rp {{ number_format($unitPrice, 0, ',', '.') }}</td>
                             <td class="px-4 py-3 text-slate-700">Rp {{ number_format($req->total_amount ?? 0, 0, ',', '.') }}</td>
                             <td class="px-4 py-3">
                                 @if(auth()->user()?->role === 'admin' && $req->status !== 'accepted')
@@ -103,7 +110,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="{{ auth()->user()?->role === 'admin' ? 8 : 7 }}" class="px-4 py-6 text-center text-sm text-slate-500">Belum ada permintaan barang supplier.</td>
+                            <td colspan="{{ auth()->user()?->role === 'admin' ? 9 : 8 }}" class="px-4 py-6 text-center text-sm text-slate-500">Belum ada permintaan barang supplier.</td>
                         </tr>
                     @endforelse
                 </tbody>

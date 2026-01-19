@@ -82,9 +82,21 @@
                             </thead>
                             <tbody class="divide-y divide-slate-200">
                                 @forelse($lossHistory as $row)
+                                    @php
+                                        $cause = strtoupper((string) ($row->type ?? '-'));
+                                        if (($row->type ?? '') === 'damaged') {
+                                            $cause = 'RUSAK';
+                                        }
+                                        if (($row->type ?? '') === 'expired') {
+                                            $cause = 'EXPIRED';
+                                        }
+                                        if (($row->type ?? '') === 'other') {
+                                            $cause = 'LAINNYA';
+                                        }
+                                    @endphp
                                     <tr>
                                         <td class="px-4 py-3 text-slate-600">{{ $row->created_at?->timezone(config('app.timezone'))->format('d/m/Y H:i:s') }}</td>
-                                        <td class="px-4 py-3 text-slate-700">{{ strtoupper($row->type ?? '-') }}</td>
+                                        <td class="px-4 py-3 text-slate-700">{{ $cause }}</td>
                                         <td class="px-4 py-3 text-slate-700">{{ $row->item?->name ?? '-' }}</td>
                                         <td class="px-4 py-3 text-slate-700">{{ $row->qty }}</td>
                                     </tr>

@@ -30,18 +30,35 @@ class SupplierController extends Controller
         $validated = $request->validate([
             'item_id' => ['required', 'integer', 'exists:items,id'],
             'buy_price' => ['nullable', 'integer', 'min:0'],
+            'sell_price' => ['nullable', 'integer', 'min:0'],
         ]);
 
-        SupplierItem::query()->updateOrCreate(
-            [
-                'supplier_id' => $supplier->id,
-                'item_id' => $validated['item_id'],
-            ],
-            [
-                'buy_price' => $validated['buy_price'] ?? 0,
-                'is_active' => true,
-            ]
-        );
+        $buyPrice = (int) ($validated['buy_price'] ?? 0);
+        $sellPrice = (int) ($validated['sell_price'] ?? 0);
+        if ($sellPrice > 0 && $sellPrice <= $buyPrice) {
+            return back()->withErrors([
+                'sell_price' => 'Harga jual harus lebih besar dari harga beli default.',
+            ]);
+        }
+
+        DB::transaction(function () use ($supplier, $validated, $buyPrice, $sellPrice) {
+            SupplierItem::query()->updateOrCreate(
+                [
+                    'supplier_id' => $supplier->id,
+                    'item_id' => $validated['item_id'],
+                ],
+                [
+                    'buy_price' => $buyPrice,
+                    'is_active' => true,
+                ]
+            );
+
+            if ($sellPrice > 0) {
+                Item::query()->whereKey((int) $validated['item_id'])->update([
+                    'price' => $sellPrice,
+                ]);
+            }
+        });
 
         return redirect()->route('masters.suppliers', ['open_supplier_id' => $supplier->id]);
     }
@@ -52,7 +69,16 @@ class SupplierController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'unit' => ['required', 'string', 'in:qty'],
             'buy_price' => ['nullable', 'integer', 'min:0'],
+            'sell_price' => ['nullable', 'integer', 'min:0'],
         ]);
+
+        $buyPrice = (int) ($validated['buy_price'] ?? 0);
+        $sellPrice = (int) ($validated['sell_price'] ?? 0);
+        if ($sellPrice > 0 && $sellPrice <= $buyPrice) {
+            return back()->withErrors([
+                'sell_price' => 'Harga jual harus lebih besar dari harga beli default.',
+            ]);
+        }
 
         DB::transaction(function () use ($supplier, $validated) {
             $item = Item::query()->create([
@@ -60,7 +86,7 @@ class SupplierController extends Controller
                 'supplier_id' => null,
                 'name' => $validated['name'],
                 'unit' => $validated['unit'],
-                'price' => 0,
+                'price' => (int) ($validated['sell_price'] ?? 0),
                 'stock' => 0,
                 'is_active' => true,
             ]);
@@ -101,17 +127,27 @@ class SupplierController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'unit' => ['required', 'string', 'max:30'],
             'buy_price' => ['nullable', 'integer', 'min:0'],
+            'sell_price' => ['nullable', 'integer', 'min:0'],
         ]);
 
-        DB::transaction(function () use ($supplierItem, $validated) {
+        $buyPrice = (int) ($validated['buy_price'] ?? 0);
+        $sellPrice = (int) ($validated['sell_price'] ?? 0);
+        if ($sellPrice > 0 && $sellPrice <= $buyPrice) {
+            return back()->withErrors([
+                'sell_price' => 'Harga jual harus lebih besar dari harga beli default.',
+            ]);
+        }
+
+        DB::transaction(function () use ($supplierItem, $validated, $buyPrice, $sellPrice) {
             Item::query()
                 ->whereKey((int) $supplierItem->item_id)
                 ->update([
                     'name' => $validated['name'],
                     'unit' => $validated['unit'],
+                    'price' => $sellPrice,
                 ]);
 
-            $supplierItem->buy_price = $validated['buy_price'] ?? 0;
+            $supplierItem->buy_price = $buyPrice;
             $supplierItem->save();
         });
 

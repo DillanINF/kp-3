@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Item;
+use App\Models\SupplierItem;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
 
@@ -97,6 +98,19 @@ class ItemController extends Controller
 
         if ($validated['item_type'] === 'supplier' && empty($validated['supplier_id'])) {
             return back()->withErrors(['supplier_id' => 'Supplier wajib dipilih untuk barang supplier.'])->withInput();
+        }
+
+        if ($validated['item_type'] === 'regular') {
+            $buyPriceMax = (int) (SupplierItem::query()
+                ->where('item_id', (int) $item->id)
+                ->max('buy_price') ?? 0);
+
+            $sellPrice = (int) ($validated['price'] ?? 0);
+            if ($buyPriceMax > 0 && $sellPrice <= $buyPriceMax) {
+                return back()->withErrors([
+                    'price' => 'Harga jual harus lebih besar dari harga beli supplier.',
+                ])->withInput();
+            }
         }
 
         $item->item_type = $validated['item_type'];

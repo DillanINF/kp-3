@@ -34,6 +34,8 @@ Route::middleware('auth')->group(function () {
     Route::prefix('invoices')->name('invoices.')->middleware('role:admin,manager')->group(function () {
         Route::get('/', [InvoiceController::class, 'index'])->name('index');
 
+        Route::get('/{invoice}/pdf', [InvoiceController::class, 'pdf'])->name('pdf');
+
         Route::post('/', [InvoiceController::class, 'store'])->middleware('role:admin')->name('store');
 
         Route::post('/{invoice}/accept', [InvoiceController::class, 'accept'])->middleware('role:admin')->name('accept');

@@ -21,6 +21,11 @@
             <div class="mt-2 text-2xl font-semibold text-slate-900">Rp {{ number_format($revenueTotal ?? 0, 0, ',', '.') }}</div>
             <div class="mt-1 text-xs text-slate-500">Total invoice posted</div>
         </a>
+        <a href="{{ route('masters.items_out') }}" class="rounded-xl border border-slate-200 bg-white p-4 hover:bg-slate-50">
+            <div class="text-sm text-slate-500">Keuntungan</div>
+            <div class="mt-2 text-2xl font-semibold text-slate-900">Rp {{ number_format($profitTotal ?? 0, 0, ',', '.') }}</div>
+            <div class="mt-1 text-xs text-slate-500">(Harga jual - harga beli) x qty terjual</div>
+        </a>
         <a href="{{ route('masters.items') }}" class="rounded-xl border border-slate-200 bg-white p-4 hover:bg-slate-50">
             <div class="text-sm text-slate-500">Data barang</div>
             <div class="mt-2 text-2xl font-semibold text-slate-900">{{ $itemsCount ?? 0 }}</div>

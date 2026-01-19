@@ -10,6 +10,7 @@ use App\Models\Item;
 use App\Models\ItemOut;
 use App\Models\PoPendingItem;
 use App\Models\SupplierItem;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -124,9 +125,8 @@ class InvoiceController extends Controller
     public function storePo(Request $request, Invoice $invoice)
     {
         $validated = $request->validate([
-            'po_no' => ['nullable', 'string', 'max:255'],
             'items' => ['required', 'array', 'min:1'],
-            'items.*.item_id' => ['required', 'integer', 'exists:items,id'],
+            'items.*.item_id' => ['required', 'integer', 'distinct', 'exists:items,id'],
             'items.*.qty' => ['required', 'integer', 'min:1'],
             'items.*.price' => ['required', 'integer', 'min:0'],
         ]);
@@ -134,6 +134,8 @@ class InvoiceController extends Controller
         $result = DB::transaction(function () use ($invoice, $validated) {
             $invoice->refresh();
             $invoice->load('customer');
+
+            $poNo = (string) ($invoice->po_no ?: ('PO-' . (string) ($invoice->invoice_no ?? '')));
 
             $hasPending = false;
             $totalPendingQty = 0;
@@ -173,7 +175,7 @@ class InvoiceController extends Controller
                     PoPendingItem::query()->create([
                         'invoice_id' => $invoice->id,
                         'invoice_no' => $invoice->invoice_no,
-                        'po_no' => $validated['po_no'] ?? $invoice->po_no,
+                        'po_no' => $poNo,
                         'customer_id' => $invoice->customer_id,
                         'item_id' => $itemId,
                         'qty' => $pendingQty,
@@ -212,7 +214,7 @@ class InvoiceController extends Controller
                 $qtyTotal += $deliverQty;
             }
 
-            $invoice->po_no = $validated['po_no'] ?? null;
+            $invoice->po_no = $poNo;
             $invoice->grand_total = $grandTotal;
             $invoice->qty_total = $qtyTotal;
             $invoice->status = $qtyTotal > 0 ? 'posted' : 'draft';
@@ -237,6 +239,45 @@ class InvoiceController extends Controller
         }
 
         return redirect()->route('invoices.index')->with('success', 'PO berhasil disimpan.');
+    }
+
+    public function pdf(Request $request, Invoice $invoice)
+    {
+        $invoice->load([
+            'customer',
+            'details.item',
+            'poPendingItems.item',
+        ]);
+
+        $printedAt = now();
+
+        $poNo = (string) ($invoice->po_no ?: ('PO-' . (string) ($invoice->invoice_no ?? '')));
+
+        $details = $invoice->details ?? collect();
+        $pending = ($invoice->poPendingItems ?? collect())
+            ->filter(fn ($r) => (string) ($r->status ?? '') === 'pending')
+            ->values();
+
+        $detailsTotal = $details->sum(fn ($d) => (int) ($d->total ?? ((int) ($d->qty ?? 0) * (int) ($d->price ?? 0))));
+        $pendingTotal = $pending->sum(fn ($d) => (int) ($d->qty ?? 0) * (int) ($d->price ?? 0));
+        $grandTotal = (int) $detailsTotal + (int) $pendingTotal;
+
+        $pdf = Pdf::loadView('invoices.pdf', [
+            'invoice' => $invoice,
+            'poNo' => $poNo,
+            'printedAt' => $printedAt,
+            'printedBy' => $request->user(),
+            'details' => $details,
+            'pending' => $pending,
+            'deliveredTotal' => (int) $detailsTotal,
+            'detailsTotal' => (int) $detailsTotal,
+            'pendingTotal' => (int) $pendingTotal,
+            'grandTotal' => (int) $grandTotal,
+        ])->setPaper('a4', 'portrait');
+
+        $filename = 'invoice-' . (string) ($invoice->invoice_no ?? $invoice->id) . '.pdf';
+
+        return $pdf->download($filename);
     }
 
     public function poPending()

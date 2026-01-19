@@ -11,64 +11,74 @@ class ReportController extends Controller
 {
     public function index(Request $request)
     {
-        $from = $request->query('from');
-        $to = $request->query('to');
+        $year = (int) $request->query('year', now()->year);
+        if ($year < 2000 || $year > 2100) {
+            $year = (int) now()->year;
+        }
 
-        $fromDate = $from ? Carbon::parse($from)->startOfDay() : now()->startOfMonth();
-        $toDate = $to ? Carbon::parse($to)->endOfDay() : now()->endOfDay();
+        $monthly = [];
 
-        $rows = ItemOut::query()
-            ->with(['customer', 'item'])
-            ->whereDate('date', '>=', $fromDate->toDateString())
-            ->whereDate('date', '<=', $toDate->toDateString())
-            ->orderByDesc('date')
-            ->orderByDesc('id')
-            ->get();
+        for ($m = 1; $m <= 12; $m++) {
+            $fromDate = Carbon::create($year, $m, 1)->startOfMonth();
+            $toDate = (clone $fromDate)->endOfMonth();
 
-        $salesRevenue = $rows
-            ->where('type', 'sale')
-            ->sum(fn ($r) => (int) $r->sell_price * (int) $r->qty);
+            $rows = ItemOut::query()
+                ->whereDate('date', '>=', $fromDate->toDateString())
+                ->whereDate('date', '<=', $toDate->toDateString())
+                ->get();
 
-        $salesCogs = $rows
-            ->where('type', 'sale')
-            ->sum(fn ($r) => (int) $r->buy_price * (int) $r->qty);
+            $salesRevenue = $rows
+                ->where('type', 'sale')
+                ->sum(fn ($r) => (int) $r->sell_price * (int) $r->qty);
 
-        $salesProfit = $salesRevenue - $salesCogs;
+            $salesCogs = $rows
+                ->where('type', 'sale')
+                ->sum(fn ($r) => (int) $r->buy_price * (int) $r->qty);
 
-        $lossDamaged = $rows
-            ->where('type', 'damaged')
-            ->sum(fn ($r) => (int) $r->buy_price * (int) $r->qty);
+            $salesProfit = $salesRevenue - $salesCogs;
 
-        $lossExpired = $rows
-            ->where('type', 'expired')
-            ->sum(fn ($r) => (int) $r->buy_price * (int) $r->qty);
+            $lossDamaged = $rows
+                ->where('type', 'damaged')
+                ->sum(fn ($r) => (int) $r->buy_price * (int) $r->qty);
 
-        $lossTotal = $lossDamaged + $lossExpired;
+            $lossExpired = $rows
+                ->where('type', 'expired')
+                ->sum(fn ($r) => (int) $r->buy_price * (int) $r->qty);
 
-        $net = $salesProfit - $lossTotal;
+            $lossTotal = $lossDamaged + $lossExpired;
+            $net = $salesProfit - $lossTotal;
+
+            $monthly[] = [
+                'month' => $fromDate->format('Y-m'),
+                'label' => $fromDate->translatedFormat('F Y'),
+                'salesRevenue' => (int) $salesRevenue,
+                'salesCogs' => (int) $salesCogs,
+                'salesProfit' => (int) $salesProfit,
+                'lossDamaged' => (int) $lossDamaged,
+                'lossExpired' => (int) $lossExpired,
+                'net' => (int) $net,
+            ];
+        }
 
         return view('reports.index', [
-            'fromDate' => $fromDate,
-            'toDate' => $toDate,
-            'rows' => $rows,
-            'salesRevenue' => $salesRevenue,
-            'salesCogs' => $salesCogs,
-            'salesProfit' => $salesProfit,
-            'lossDamagedExpired' => $lossDamaged + $lossExpired,
-            'lossDamaged' => $lossDamaged,
-            'lossExpired' => $lossExpired,
-            'lossTotal' => $lossTotal,
-            'net' => $net,
+            'year' => $year,
+            'monthly' => $monthly,
         ]);
     }
 
     public function pdf(Request $request)
     {
+        $month = trim((string) $request->query('month', ''));
         $from = $request->query('from');
         $to = $request->query('to');
 
-        $fromDate = $from ? Carbon::parse($from)->startOfDay() : now()->startOfMonth();
-        $toDate = $to ? Carbon::parse($to)->endOfDay() : now()->endOfDay();
+        if ($month !== '') {
+            $fromDate = Carbon::createFromFormat('Y-m', $month)->startOfMonth();
+            $toDate = (clone $fromDate)->endOfMonth();
+        } else {
+            $fromDate = $from ? Carbon::parse($from)->startOfDay() : now()->startOfMonth();
+            $toDate = $to ? Carbon::parse($to)->endOfDay() : now()->endOfDay();
+        }
 
         $rows = ItemOut::query()
             ->with(['customer', 'item'])
@@ -105,6 +115,7 @@ class ReportController extends Controller
         $pdf = Pdf::loadView('reports.pdf', [
             'fromDate' => $fromDate,
             'toDate' => $toDate,
+            'month' => $month,
             'printedAt' => $printedAt,
             'printedBy' => $request->user(),
             'rows' => $rows,

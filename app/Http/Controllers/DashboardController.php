@@ -37,6 +37,11 @@ class DashboardController extends Controller
         $goodsOutTotalQty = (int) (ItemOut::query()->sum('qty') ?? 0);
         $goodsInTotalQty = (int) (ItemIn::query()->sum('qty') ?? 0);
 
+        $profitTotal = (int) (ItemOut::query()
+            ->where('type', 'sale')
+            ->selectRaw('COALESCE(SUM((sell_price - buy_price) * qty), 0) as profit')
+            ->value('profit') ?? 0);
+
         $latestInvoices = Invoice::query()
             ->with('customer')
             ->orderByDesc('created_at')
@@ -101,6 +106,7 @@ class DashboardController extends Controller
             'invoicesCount' => $invoicesCount,
             'expenseTotal' => $expenseTotal,
             'revenueTotal' => $revenueTotal,
+            'profitTotal' => $profitTotal,
             'customersCount' => $customersCount,
             'suppliersCount' => $suppliersCount,
             'itemsCount' => $itemsCount,

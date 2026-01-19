@@ -97,6 +97,7 @@
                                                         <th class="px-3 py-2">Nama Produk</th>
                                                         <th class="px-3 py-2">Satuan</th>
                                                         <th class="px-3 py-2 text-right">Harga Beli Default</th>
+                                                        <th class="px-3 py-2 text-right">Harga Jual (Customer)</th>
                                                         @if(auth()->user()?->role === 'admin')
                                                             <th class="px-3 py-2 text-center">Aksi</th>
                                                         @endif
@@ -108,6 +109,7 @@
                                                             <td class="px-3 py-2 font-medium text-slate-900">{{ $supplierItem->item?->name ?? '-' }}</td>
                                                             <td class="px-3 py-2 text-slate-700">{{ $supplierItem->item?->unit ?? '-' }}</td>
                                                             <td class="px-3 py-2 text-right text-slate-700">Rp {{ number_format($supplierItem->buy_price ?? 0, 0, ',', '.') }}</td>
+                                                            <td class="px-3 py-2 text-right text-slate-700">Rp {{ number_format($supplierItem->item?->price ?? 0, 0, ',', '.') }}</td>
                                                             @if(auth()->user()?->role === 'admin')
                                                                 <td class="px-3 py-2">
                                                                     <div class="flex items-center justify-center gap-2">
@@ -116,6 +118,7 @@
                                                                             data-action="edit-supplier-item"
                                                                             data-supplier-item-update-url="{{ route('masters.suppliers.items.update', [$supplier, $supplierItem]) }}"
                                                                             data-supplier-item-buy-price="{{ (int) ($supplierItem->buy_price ?? 0) }}"
+                                                                            data-supplier-item-sell-price="{{ (int) ($supplierItem->item?->price ?? 0) }}"
                                                                             data-supplier-item-name="{{ $supplierItem->item?->name ?? '' }}"
                                                                             data-supplier-item-unit="{{ $supplierItem->item?->unit ?? '' }}"
                                                                             class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
@@ -182,6 +185,11 @@
                         <input data-add-supplier-item-buy-price name="buy_price" type="number" min="0" step="1" placeholder="Harga beli default" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100" />
                     </div>
 
+                    <div class="space-y-2">
+                        <label class="text-sm font-semibold text-slate-700">Harga Jual (Customer)</label>
+                        <input data-add-supplier-item-sell-price name="sell_price" type="number" min="0" step="1" placeholder="Harga jual" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100" />
+                    </div>
+
                     <div class="flex items-center justify-end gap-2 pt-2">
                         <button type="button" data-close-modal="modal-add-supplier-item" class="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">Batal</button>
                         <button type="submit" class="inline-flex h-10 items-center justify-center rounded-xl bg-slate-900 px-6 text-sm font-semibold text-white hover:bg-slate-800">Simpan</button>
@@ -214,6 +222,11 @@
                     <div class="space-y-2">
                         <label class="text-sm font-semibold text-slate-700">Harga Beli Default</label>
                         <input data-edit-supplier-item-buy-price name="buy_price" type="number" min="0" step="1" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100" required />
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-sm font-semibold text-slate-700">Harga Jual (Customer)</label>
+                        <input data-edit-supplier-item-sell-price name="sell_price" type="number" min="0" step="1" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100" required />
                     </div>
 
                     <div class="flex items-center justify-end gap-2 pt-2">

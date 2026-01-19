@@ -22,29 +22,42 @@
         .right { text-align: right; }
         .center { text-align: center; }
         .footer { margin-top: 16px; font-size: 10px; color: #6B7280; }
+        .print-meta { margin-top: 14px; color: #6B7280; font-size: 11px; }
+        table.sign { width: 100%; margin-top: 18px; border-collapse: collapse; }
+        table.sign td { width: 50%; vertical-align: top; }
+        .sign-label { color: #111827; font-weight: 700; margin-bottom: 54px; }
+        .sign-line { border-top: 1px solid #9CA3AF; width: 180px; }
     </style>
 </head>
 <body>
     <div>
         <div class="title">Laporan Keuntungan & Kerugian</div>
-        <div class="subtitle muted">{{ config('app.name') }}</div>
+        <div class="subtitle muted"></div>
 
-        <div class="meta"><span class="muted">Periode:</span> {{ ($fromDate ?? now()->startOfMonth())->format('d/m/Y') }} - {{ ($toDate ?? now())->format('d/m/Y') }}</div>
-        <div class="meta"><span class="muted">Dicetak:</span> {{ ($printedAt ?? now())->format('d/m/Y H:i') }} @if(!empty($printedBy?->name))<span class="muted">oleh</span> {{ $printedBy->name }}@endif</div>
+        @php
+            $monthParam = trim((string) ($month ?? ''));
+        @endphp
+        <div class="meta"><span class="muted">Periode:</span>
+            @if($monthParam !== '')
+                {{ \Carbon\Carbon::createFromFormat('Y-m', $monthParam)->translatedFormat('F Y') }}
+            @else
+                {{ ($fromDate ?? now()->startOfMonth())->format('d/m/Y') }} - {{ ($toDate ?? now())->format('d/m/Y') }}
+            @endif
+        </div>
     </div>
 
     <table class="summary">
         <tr>
             <td>
-                <div class="label">Omzet Penjualan</div>
+                <div class="label">Pendapatan</div>
                 <div class="value">Rp {{ number_format($salesRevenue ?? 0, 0, ',', '.') }}</div>
             </td>
             <td>
-                <div class="label">HPP Penjualan</div>
+                <div class="label">Modal</div>
                 <div class="value">Rp {{ number_format($salesCogs ?? 0, 0, ',', '.') }}</div>
             </td>
             <td>
-                <div class="label">Keuntungan (Sale)</div>
+                <div class="label">Profit</div>
                 <div class="value">Rp {{ number_format($salesProfit ?? 0, 0, ',', '.') }}</div>
             </td>
         </tr>
@@ -58,7 +71,7 @@
                 <div class="value">Rp {{ number_format($lossExpired ?? 0, 0, ',', '.') }}</div>
             </td>
             <td>
-                <div class="label">Net</div>
+                <div class="label">Profit Bersih</div>
                 <div class="value">Rp {{ number_format($net ?? 0, 0, ',', '.') }}</div>
             </td>
         </tr>
@@ -108,6 +121,21 @@
                 </tr>
             @endforelse
         </tbody>
+    </table>
+
+    <div class="print-meta">Dicetak: {{ ($printedAt ?? now())->format('d/m/Y H:i') }} @if(!empty($printedBy?->name)) oleh {{ $printedBy->name }}@endif</div>
+
+    <table class="sign">
+        <tr>
+            <td>
+                <div class="sign-label">Diperiksa</div>
+                <div class="sign-line"></div>
+            </td>
+            <td class="right">
+                <div class="sign-label">Dibuat</div>
+                <div class="sign-line" style="margin-left: auto;"></div>
+            </td>
+        </tr>
     </table>
 
     <div class="footer">Sumber: barang keluar (penjualan + rusak/expired).</div>

@@ -271,6 +271,30 @@ const hydratePoPageFromDom = () => {
     recalcPoTotals();
 };
 
+const updatePoItemOptionAvailability = () => {
+    const tbody = document.querySelector('[data-po-items]');
+    if (!tbody) return;
+
+    const selects = Array.from(tbody.querySelectorAll('[data-po-item-id]'));
+    const used = new Set(
+        selects
+            .map((s) => String(s?.value ?? '').trim())
+            .filter((v) => v.length > 0),
+    );
+
+    selects.forEach((sel) => {
+        const current = String(sel?.value ?? '').trim();
+        Array.from(sel.options || []).forEach((opt) => {
+            const v = String(opt?.value ?? '').trim();
+            if (v.length === 0) {
+                opt.disabled = false;
+                return;
+            }
+            opt.disabled = used.has(v) && v !== current;
+        });
+    });
+};
+
 const addPoRow = () => {
     const tbody = document.querySelector('[data-po-items]');
     if (!tbody) return;
@@ -296,6 +320,7 @@ const addPoRow = () => {
     tbody.appendChild(clone);
     reindexPoRows();
     recalcPoTotals();
+    updatePoItemOptionAvailability();
 };
 
 const buildPoItemRow = (item = {}) => {
@@ -580,47 +605,6 @@ const handleTambahInvoice = () => {
     closeModal('modal-tambah-invoice');
 };
 
-const handleAturInvoice = () => {
-    const selectEl = document.querySelector('[data-atur-invoice-customer]');
-    const nextEl = document.querySelector('[data-atur-invoice-next]');
-    const selected = getSelectedCustomer(selectEl);
-    if (!selected) {
-        window.alert('Pilih customer terlebih dahulu.');
-        return;
-    }
-
-    const nextValue = Number.parseInt(nextEl?.value || '', 10);
-    if (!Number.isFinite(nextValue) || nextValue <= 0) {
-        window.alert('No Invoice Berikutnya harus berupa angka.');
-        return;
-    }
-
-    const rows = readInvoiceRows();
-    const used = new Set(rows.map((r) => Number.parseInt(r?.invoiceNo, 10)).filter((n) => Number.isFinite(n)));
-    if (used.has(nextValue)) {
-        window.alert('No Invoice tersebut sudah dipakai.');
-        return;
-    }
-
-    writeNextInvoiceNo(nextValue);
-
-    const newRows = rows.concat([
-        {
-            invoiceNo: nextValue,
-            customerId: selected.customerId,
-            customerName: selected.name,
-            noPo: null,
-            totalPo: null,
-            qty: null,
-            dateStr: formatDateId(new Date()),
-        },
-    ]);
-    writeInvoiceRows(newRows);
-    writeNextInvoiceNo(nextValue + 1);
-    renderInvoiceTable();
-    closeModal('modal-atur-invoice');
-};
-
 document.addEventListener('click', (e) => {
     const addItemBtn = e.target.closest('[data-po-add-item]');
     if (addItemBtn) {
@@ -650,6 +634,9 @@ document.addEventListener('click', (e) => {
         const priceEl = document.querySelector('[data-add-supplier-item-buy-price]');
         if (priceEl) priceEl.value = '';
 
+        const sellPriceEl = document.querySelector('[data-add-supplier-item-sell-price]');
+        if (sellPriceEl) sellPriceEl.value = '';
+
         openModal('modal-add-supplier-item');
         if (nameEl) nameEl.focus();
         return;
@@ -674,6 +661,7 @@ document.addEventListener('click', (e) => {
             }
             reindexPoRows();
             recalcPoTotals();
+            updatePoItemOptionAvailability();
         }
         return;
     }
@@ -748,6 +736,7 @@ document.addEventListener('click', (e) => {
     if (editSupplierItemBtn) {
         const updateUrl = editSupplierItemBtn.getAttribute('data-supplier-item-update-url') || '';
         const buyPrice = editSupplierItemBtn.getAttribute('data-supplier-item-buy-price') || '0';
+        const sellPrice = editSupplierItemBtn.getAttribute('data-supplier-item-sell-price') || '0';
         const name = editSupplierItemBtn.getAttribute('data-supplier-item-name') || '';
         const unit = editSupplierItemBtn.getAttribute('data-supplier-item-unit') || '';
 
@@ -758,6 +747,9 @@ document.addEventListener('click', (e) => {
 
         const priceEl = document.querySelector('[data-edit-supplier-item-buy-price]');
         if (priceEl) priceEl.value = String(buyPrice);
+
+        const sellPriceEl = document.querySelector('[data-edit-supplier-item-sell-price]');
+        if (sellPriceEl) sellPriceEl.value = String(sellPrice);
 
         const nameEl = document.querySelector('[data-edit-supplier-item-name]');
         if (nameEl) nameEl.value = String(name);
@@ -874,12 +866,6 @@ document.addEventListener('click', (e) => {
         return;
     }
 
-    const aturBtn = e.target.closest('#btn-atur-invoice-lanjut');
-    if (aturBtn) {
-        handleAturInvoice();
-        return;
-    }
-
     const deleteBtn = e.target.closest('[data-action="delete-invoice-row"]');
     if (deleteBtn) {
         const row = deleteBtn.closest('tr');
@@ -963,15 +949,33 @@ document.addEventListener('input', (e) => {
 });
 
 document.addEventListener('change', (e) => {
-    const selectEl = e.target.closest('[data-po-item-id]');
-    if (!selectEl) return;
-
-    const row = selectEl.closest('[data-po-item-row]');
-    const unitEl = row?.querySelector('[data-po-item-unit]');
-    const unit = selectEl.selectedOptions?.[0]?.dataset?.unit;
-    if (unitEl) unitEl.value = unit ? String(unit) : 'pcs';
-    recalcPoTotals();
+    const inPoItems = e.target.closest('[data-po-items]');
+    if (!inPoItems) return;
+    if (e.target.closest('[data-po-item-id]')) {
+        const selectEl = e.target.closest('[data-po-item-id]');
+        const row = selectEl.closest('[data-po-item-row]');
+        const selectedValue = String(selectEl?.value ?? '').trim();
+        if (selectedValue.length > 0) {
+            const all = Array.from(document.querySelectorAll('[data-po-items] [data-po-item-id]'));
+            const count = all.filter((s) => String(s?.value ?? '').trim() === selectedValue).length;
+            if (count > 1) {
+                selectEl.value = '';
+                updatePoItemOptionAvailability();
+                window.alert('Produk yang sama tidak boleh dipilih lebih dari satu kali.');
+                const unitEl = row?.querySelector('[data-po-item-unit]');
+                if (unitEl) unitEl.value = 'pcs';
+                recalcPoTotals();
+                return;
+            }
+        }
+        const unitEl = row?.querySelector('[data-po-item-unit]');
+        const unit = selectEl.selectedOptions?.[0]?.dataset?.unit;
+        if (unitEl) unitEl.value = unit ? String(unit) : 'pcs';
+        recalcPoTotals();
+        updatePoItemOptionAvailability();
+    }
 });
 
 hydratePoPageFromDom();
+updatePoItemOptionAvailability();
 updateDashboardKpis();
