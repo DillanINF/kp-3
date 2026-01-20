@@ -17,7 +17,8 @@
                         <th class="px-4 py-3">No</th>
                         <th class="px-4 py-3">Nama</th>
                         <th class="px-4 py-3">Stok</th>
-                        <th class="px-4 py-3">Harga</th>
+                        <th class="px-4 py-3">Harga Beli (Supplier/pcs)</th>
+                        <th class="px-4 py-3">Harga Jual (Customer)</th>
                         @if(auth()->user()?->role === 'admin')
                             <th class="px-4 py-3 text-center">Aksi</th>
                         @endif
@@ -29,6 +30,7 @@
                             <td class="px-4 py-3 text-slate-700">{{ $loop->iteration }}</td>
                             <td class="px-4 py-3 text-slate-700">{{ $item->name }}</td>
                             <td class="px-4 py-3 text-slate-700">{{ $item->stock }}</td>
+                            <td class="px-4 py-3 text-slate-700">Rp {{ number_format($item->supplier_buy_price_per_pcs ?? 0, 0, ',', '.') }}</td>
                             <td class="px-4 py-3 text-slate-700">Rp {{ number_format($item->price ?? 0, 0, ',', '.') }}</td>
                             @if(auth()->user()?->role === 'admin')
                                 <td class="px-4 py-3">
@@ -44,7 +46,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="{{ auth()->user()?->role === 'admin' ? 5 : 4 }}" class="px-4 py-6 text-center text-sm text-slate-500">Belum ada data barang biasa.</td>
+                            <td colspan="{{ auth()->user()?->role === 'admin' ? 6 : 5 }}" class="px-4 py-6 text-center text-sm text-slate-500">Belum ada data barang biasa.</td>
                         </tr>
                     @endforelse
                 </tbody>

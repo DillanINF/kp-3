@@ -133,19 +133,34 @@
         </table>
     @endif
 
-    <div class="print-meta">Dicetak: {{ ($printedAt ?? now())->format('d/m/Y H:i') }} @if(!empty($printedBy?->name)) oleh {{ $printedBy->name }}@endif</div>
+    @php
+    $printedByName = optional($printedBy)->name;
+    $printedAt = $printedAt ?? now();
+@endphp
 
-    <table class="sign">
-        <tr>
-            <td>
-                <div class="sign-label">Penerima</div>
-                <div class="sign-line"></div>
-            </td>
-            <td class="right">
-                <div class="sign-label">Hormat Kami</div>
-                <div class="sign-line" style="margin-left: auto;"></div>
-            </td>
-        </tr>
-    </table>
+<div class="print-meta">
+    Dicetak: {{ $printedAt->format('d/m/Y H:i') }}
+    @if(!empty($printedByName))
+        oleh {{ $printedByName }}
+    @endif
+</div>
+
+<table class="sign">
+    <tr>
+        <td>
+            <div class="sign-label">Penerima</div>
+            <div class="sign-line"></div>
+        </td>
+        <td class="right">
+            <div class="sign-label">
+                Hormat Kami
+                @if(!empty($printedByName))
+                    ({{ $printedByName }})
+                @endif
+            </div>
+            <div class="sign-line" style="margin-left: auto;"></div>
+        </td>
+    </tr>
+</table>
 </body>
 </html>

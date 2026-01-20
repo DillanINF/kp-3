@@ -11,7 +11,17 @@ class ItemController extends Controller
 {
     public function index()
     {
-        $regularItems = Item::query()->where('item_type', 'regular')->orderBy('name')->get();
+        $regularItems = Item::query()
+            ->where('item_type', 'regular')
+            ->select('items.*')
+            ->selectSub(function ($query) {
+                $query
+                    ->from('supplier_items')
+                    ->whereColumn('supplier_items.item_id', 'items.id')
+                    ->selectRaw('COALESCE(MAX(supplier_items.buy_price), 0)');
+            }, 'supplier_buy_price_per_pcs')
+            ->orderBy('name')
+            ->get();
 
         return view('masters.items', [
             'regularItems' => $regularItems,
