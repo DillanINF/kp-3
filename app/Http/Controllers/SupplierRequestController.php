@@ -215,11 +215,16 @@ class SupplierRequestController extends Controller
 
         $supplierRequest->loadMissing(['supplier', 'items' => fn ($q) => $q->with('item')]);
 
-        $forcedTo = config('mail.force_to');
-        $email = $forcedTo ?: $supplierRequest->supplier?->email;
-        if ($email) {
-            Mail::to($email)->send(new SupplierRequestSent($supplierRequest));
+        $supplierEmail = $supplierRequest->supplier?->email;
+        if (!$supplierEmail) {
+            abort(422, 'Email supplier belum diisi.');
         }
+
+        $forcedTo = config('mail.force_to');
+        $isNonProduction = app()->environment(['local', 'testing']);
+        $toEmail = ($forcedTo && $isNonProduction) ? $forcedTo : $supplierEmail;
+
+        Mail::to($toEmail)->send(new SupplierRequestSent($supplierRequest));
 
         return redirect()->route('masters.items_supplier', ['supplier_id' => $supplierRequest->supplier_id]);
     }
