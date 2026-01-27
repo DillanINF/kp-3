@@ -15,14 +15,14 @@
         <div class="rounded-xl border border-slate-200 bg-white p-4">
             <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div>
-                    <div class="text-sm font-semibold text-slate-900">Laporan Keuntungan & Kerugian</div>
+                    <div class="text-sm font-semibold text-slate-900 text-center">LAPORAN KEUNTUNGAN & KERUGIAN</div>
                     <div class="mt-1 text-sm text-slate-600">Sumber: barang keluar (penjualan + rusak/expired).</div>
                 </div>
 
                 <form method="GET" class="flex flex-col gap-2 sm:flex-row sm:items-end">
                     <div class="space-y-1">
                         <label class="text-sm font-medium text-slate-700">Tahun</label>
-                        <select name="year" class="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none sm:w-[160px]" onchange="this.form.submit()">
+                        <select name="year" class="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none sm:w-32" onchange="this.form.submit()">
                             @foreach(($years ?? []) as $y)
                                 <option value="{{ $y }}" {{ (int) $y === $yearValue ? 'selected' : '' }}>{{ $y }}</option>
                             @endforeach

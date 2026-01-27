@@ -3,12 +3,12 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Laporan Keuntungan & Kerugian</title>
+    <title>LAPORAN KEUNTUNGAN & KERUGIAN</title>
     <style>
         * { font-family: DejaVu Sans, sans-serif; }
         body { font-size: 12px; color: #111827; }
         .muted { color: #6B7280; }
-        .title { font-size: 18px; font-weight: 700; margin: 0 0 4px 0; }
+        .title { font-size: 24px; font-weight: 700; margin: 0 10px 4px 0; }
         .subtitle { margin: 0 0 12px 0; }
         .meta { margin: 0 0 4px 0; }
         .summary { width: 100%; border-collapse: collapse; margin-top: 12px; }
@@ -26,12 +26,13 @@
         table.sign { width: 100%; margin-top: 18px; border-collapse: collapse; }
         table.sign td { width: 50%; vertical-align: top; }
         .sign-label { color: #111827; font-weight: 700; margin-bottom: 54px; }
+        .sign-label1 { color: #111827; font-weight: 700; margin-bottom: 54px; text-align: left; margin-left: 170px; }
         .sign-line { border-top: 1px solid #9CA3AF; width: 180px; }
     </style>
 </head>
 <body>
     <div>
-        <div class="title">Laporan Keuntungan & Kerugian</div>
+        <div class="title center">LAPORAN KEUNTUNGAN & KERUGIAN</div>
         <div class="subtitle muted"></div>
 
         @php
@@ -132,8 +133,8 @@
                 <div class="sign-line"></div>
             </td>
             <td class="right">
-                <div class="sign-label">Dibuat</div>
-                <div class="sign-line" style="margin-left: auto;"></div>
+                <div class="sign-label1">Dibuat</div>
+                <div class="sign-label1">@if(!empty($printedBy?->name)){{ $printedBy->name }}@endif</div>
             </td>
         </tr>
     </table>
