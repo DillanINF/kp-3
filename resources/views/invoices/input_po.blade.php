@@ -40,7 +40,7 @@
                     <div class="mt-0.5 text-xs text-slate-500">Tambah produk, qty, dan harga untuk menghitung total.</div>
                 </div>
 
-                <button type="button" data-po-add-item class="inline-flex h-10 items-center justify-center rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white hover:bg-indigo-700">Tambah Produk</button>
+                <button type="button" data-po-add-item class="inline-flex h-10 items-center justify-center rounded-xl bg-red-600 px-4 text-sm font-semibold text-white hover:bg-indigo-700">Tambah Produk</button>
             </div>
 
             <div class="overflow-x-auto">
