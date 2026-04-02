@@ -76,32 +76,62 @@
             font-size: 13px;
         }
 
+        /* ================= TABLE ================= */
         table.data {
             width: 100%;
             border-collapse: collapse;
             font-size: 12px;
+            table-layout: fixed;
+        }
+
+        table.data th,
+        table.data td {
+            padding: 10px;
+            border-bottom: 1px solid #E5E7EB;
+            vertical-align: middle;
         }
 
         table.data th {
             background: #F3F4F6;
-            padding: 10px;
-            text-align: left;
             font-size: 11px;
             text-transform: uppercase;
         }
 
-        table.data td {
-            padding: 10px;
-            border-bottom: 1px solid #E5E7EB;
+        table.data tr {
+            height: 45px;
         }
 
-        .right {
+        /* WIDTH KOLOM */
+        .col-no {
+            width: 5%;
+            text-align: center;
+            padding-right: 10px; /* 🔥 kasih jarak ke kanan */
+        }
+
+        .col-produk {
+            width: 45%;
+            text-align: left;
+            padding-left: 25px; /* 🔥 DIGESER KE KANAN */
+            white-space: nowrap;
+        }
+
+        .col-qty {
+            width: 10%;
+            text-align: center;
+        }
+
+        .col-harga {
+            width: 20%;
             text-align: right;
         }
 
-        .center {
-            text-align: center;
+        .col-total {
+            width: 20%;
+            text-align: right;
         }
+
+        .right { text-align: right; }
+        .center { text-align: center; }
 
         .total {
             font-weight: bold;
@@ -114,22 +144,38 @@
             color: #6B7280;
         }
 
+        /* ================= SIGN ================= */
         .sign {
             margin-top: 50px;
             width: 100%;
+            table-layout: fixed;
         }
 
         .sign td {
             width: 50%;
-            text-align: center;
+            vertical-align: top;
+        }
+
+        .sign td:first-child {
+            text-align: left;
+        }
+
+        .sign td:last-child {
+            text-align: right;
         }
 
         .sign-line {
             margin-top: 60px;
             border-top: 1px solid #9CA3AF;
             width: 200px;
+        }
+
+        .sign td:first-child .sign-line {
+            margin-left: 0;
+        }
+
+        .sign td:last-child .sign-line {
             margin-left: auto;
-            margin-right: auto;
         }
     </style>
 </head>
@@ -142,13 +188,13 @@
             <table class="flex">
                 <tr>
                     <td style="width: 80px;">
-                        <img src="{{ url('LOGO.png') }}" style="width:70px;">
+                        <img src="{{ public_path('LOGO.png') }}" style="width:70px;">
                     </td>
                     <td>
                         <div class="company">PT CAM JAYA ABADI</div>
-                        <div class="muted">Jl. Raya Cibinong No. 123</div>
-                        <div class="muted">Bogor, Jawa Barat</div>
-                        <div class="muted">Telp: 0812-3456-7890</div>
+                        <div class="muted">Jl. Wahana Bakti No.65 17510</div>
+                        <div class="muted">Bekasi, Jawa Barat</div>
+                        <div class="muted">Telp: 021 - 8837 1899</div>
                     </td>
                     <td class="invoice-title">
                         INVOICE
@@ -170,8 +216,8 @@
                 </tr>
                 <tr>
                     <td class="meta-label">Tanggal</td>
-                    <td class="meta-value">:
-                        {{ $invoice->date ? $invoice->date->format('d/m/Y') : '-' }}
+                    <td class="meta-value">
+                        : {{ $invoice->date ? $invoice->date->format('d/m/Y') : '-' }}
                     </td>
                 </tr>
                 <tr>
@@ -187,11 +233,11 @@
         <table class="data">
             <thead>
                 <tr>
-                    <th style="width:30px;">No</th>
-                    <th>Produk</th>
-                    <th class="right">Qty</th>
-                    <th class="right">Harga</th>
-                    <th class="right">Total</th>
+                    <th class="col-no">No</th>
+                    <th class="col-produk">Produk</th>
+                    <th class="col-qty">Qty</th>
+                    <th class="col-harga">Harga</th>
+                    <th class="col-total">Total</th>
                 </tr>
             </thead>
             <tbody>
@@ -202,11 +248,11 @@
                         $total = $qty * $price;
                     @endphp
                     <tr>
-                        <td class="center">{{ $loop->iteration }}</td>
-                        <td>{{ $d->item?->name ?? '-' }}</td>
-                        <td class="right">{{ $qty }}</td>
-                        <td class="right">Rp {{ number_format($price,0,',','.') }}</td>
-                        <td class="right">Rp {{ number_format($total,0,',','.') }}</td>
+                        <td class="col-no">{{ $loop->iteration }}</td>
+                        <td class="col-produk">{{ $d->item?->name ?? '-' }}</td>
+                        <td class="col-qty">{{ $qty }}</td>
+                        <td class="col-harga">Rp {{ number_format($price,0,',','.') }}</td>
+                        <td class="col-total">Rp {{ number_format($total,0,',','.') }}</td>
                     </tr>
                 @empty
                     <tr>

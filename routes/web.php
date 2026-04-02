@@ -12,6 +12,7 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\SupplierRequestController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
 
 Route::get('/', function () {
     return redirect()->route('dashboard');
@@ -25,12 +26,24 @@ Route::middleware('guest')->group(function () {
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->middleware('role:admin,manager')->name('dashboard');
 
-    Route::get('/reports', [ReportController::class, 'index'])->middleware('role:admin,manager')->name('reports.index');
+    Route::get('/dashboard', [DashboardController::class, 'index'])
+        ->middleware('role:admin,manager')
+        ->name('dashboard');
 
-    Route::get('/reports/pdf', [ReportController::class, 'pdf'])->middleware('role:admin,manager')->name('reports.pdf');
+    Route::get('/reports', [ReportController::class, 'index'])
+        ->middleware('role:admin,manager')
+        ->name('reports.index');
 
+    Route::get('/reports/pdf', [ReportController::class, 'pdf'])
+        ->middleware('role:admin,manager')
+        ->name('reports.pdf');
+
+    /*
+    |--------------------------------------------------------------------------
+    | INVOICES
+    |--------------------------------------------------------------------------
+    */
     Route::prefix('invoices')->name('invoices.')->middleware('role:admin,manager')->group(function () {
         Route::get('/', [InvoiceController::class, 'index'])->name('index');
 
@@ -42,10 +55,17 @@ Route::middleware('auth')->group(function () {
 
         Route::delete('/{invoice}', [InvoiceController::class, 'destroy'])->middleware('role:admin')->name('destroy');
 
-        Route::get('/by-no/{invoiceNo}/input-po', [InvoiceController::class, 'inputPoByNo'])->middleware('role:admin')->name('input_po_by_no');
+        Route::get('/by-no/{invoiceNo}/input-po', [InvoiceController::class, 'inputPoByNo'])
+            ->middleware('role:admin')
+            ->name('input_po_by_no');
 
-        Route::get('/{invoice}/input-po', [InvoiceController::class, 'inputPo'])->middleware('role:admin')->name('input_po');
-        Route::post('/{invoice}/input-po', [InvoiceController::class, 'storePo'])->middleware('role:admin')->name('input_po.store');
+        Route::get('/{invoice}/input-po', [InvoiceController::class, 'inputPo'])
+            ->middleware('role:admin')
+            ->name('input_po');
+
+        Route::post('/{invoice}/input-po', [InvoiceController::class, 'storePo'])
+            ->middleware('role:admin')
+            ->name('input_po.store');
 
         Route::get('/po-belum-terkirim', [InvoiceController::class, 'poPending'])->name('po_pending');
 
@@ -62,33 +82,46 @@ Route::middleware('auth')->group(function () {
             ->name('po_pending.destroy');
     });
 
+    /*
+    |--------------------------------------------------------------------------
+    | MASTERS
+    |--------------------------------------------------------------------------
+    */
     Route::prefix('masters')->name('masters.')->middleware('role:admin,manager')->group(function () {
+
+        // ================= CUSTOMER =================
         Route::get('/customers', [CustomerController::class, 'index'])->name('customers');
         Route::post('/customers', [CustomerController::class, 'store'])->middleware('role:admin')->name('customers.store');
         Route::put('/customers/{customer}', [CustomerController::class, 'update'])->middleware('role:admin')->name('customers.update');
         Route::delete('/customers/{customer}', [CustomerController::class, 'destroy'])->middleware('role:admin')->name('customers.destroy');
 
+        // ================= SUPPLIER =================
         Route::get('/suppliers', [SupplierController::class, 'index'])->name('suppliers');
         Route::post('/suppliers', [SupplierController::class, 'store'])->middleware('role:admin')->name('suppliers.store');
         Route::put('/suppliers/{supplier}', [SupplierController::class, 'update'])->middleware('role:admin')->name('suppliers.update');
         Route::delete('/suppliers/{supplier}', [SupplierController::class, 'destroy'])->middleware('role:admin')->name('suppliers.destroy');
 
+        // ================= SUPPLIER ITEMS =================
         Route::post('/suppliers/{supplier}/items', [SupplierController::class, 'storeItem'])->middleware('role:admin')->name('suppliers.items.store');
         Route::post('/suppliers/{supplier}/items/new', [SupplierController::class, 'storeNewItem'])->middleware('role:admin')->name('suppliers.items.store_new');
         Route::put('/suppliers/{supplier}/items/{supplierItem}', [SupplierController::class, 'updateItem'])->middleware('role:admin')->name('suppliers.items.update');
         Route::delete('/suppliers/{supplier}/items/{supplierItem}', [SupplierController::class, 'destroyItem'])->middleware('role:admin')->name('suppliers.items.destroy');
 
+        // ================= ITEMS =================
         Route::get('/items', [ItemController::class, 'index'])->name('items');
+        Route::post('/items', [ItemController::class, 'store'])->middleware('role:admin')->name('items.store');
+        Route::put('/items/{item}', [ItemController::class, 'update'])->middleware('role:admin')->name('items.update');
+        Route::delete('/items/{item}', [ItemController::class, 'destroy'])->middleware('role:admin')->name('items.destroy');
+
+        // ================= REQUEST =================
         Route::get('/items-supplier', [SupplierRequestController::class, 'index'])->name('items_supplier');
         Route::post('/items-supplier', [SupplierRequestController::class, 'store'])->middleware('role:admin')->name('items_supplier.store');
         Route::put('/items-supplier/{supplierRequest}', [SupplierRequestController::class, 'update'])->middleware('role:admin')->name('items_supplier.update');
         Route::post('/items-supplier/{supplierRequest}/send', [SupplierRequestController::class, 'send'])->middleware('role:admin')->name('items_supplier.send');
         Route::post('/items-supplier/{supplierRequest}/accept', [SupplierRequestController::class, 'accept'])->middleware('role:admin,manager')->name('items_supplier.accept');
         Route::delete('/items-supplier/{supplierRequest}', [SupplierRequestController::class, 'destroy'])->middleware('role:admin')->name('items_supplier.destroy');
-        Route::post('/items', [ItemController::class, 'store'])->middleware('role:admin')->name('items.store');
-        Route::put('/items/{item}', [ItemController::class, 'update'])->middleware('role:admin')->name('items.update');
-        Route::delete('/items/{item}', [ItemController::class, 'destroy'])->middleware('role:admin')->name('items.destroy');
 
+        // ================= STOCK =================
         Route::get('/items-in', [ItemInController::class, 'index'])->name('items_in');
         Route::post('/items-in', [ItemInController::class, 'store'])->middleware('role:admin')->name('items_in.store');
         Route::put('/items-in/{itemIn}', [ItemInController::class, 'update'])->middleware('role:admin')->name('items_in.update');
@@ -98,11 +131,38 @@ Route::middleware('auth')->group(function () {
         Route::post('/items-out', [ItemOutController::class, 'store'])->middleware('role:admin')->name('items_out.store');
         Route::put('/items-out/{itemOut}', [ItemOutController::class, 'update'])->middleware('role:admin')->name('items_out.update');
         Route::delete('/items-out/{itemOut}', [ItemOutController::class, 'destroy'])->middleware('role:admin')->name('items_out.destroy');
+
+        // ================= 🔥 PENGIRIM (BARU) =================
+        Route::get('/pengirim', function () {
+            return view('masters.pengirim');
+        })->name('pengirim');
+
+        Route::post('/pengirim', function (Request $request) {
+            session(['nama_pengirim' => $request->nama_pengirim]);
+            return back()->with('success', 'Nama pengirim berhasil disimpan');
+        })->name('pengirim.store');
     });
 
+    /*
+    |--------------------------------------------------------------------------
+    | SETTINGS
+    |--------------------------------------------------------------------------
+    */
     Route::get('/settings', [SettingsController::class, 'index'])->middleware('role:admin,manager')->name('settings');
-    Route::post('/settings/profile', [SettingsController::class, 'updateProfile'])->middleware('role:admin,manager')->name('settings.profile.update');
-    Route::post('/settings/password', [SettingsController::class, 'updatePassword'])->middleware('role:admin,manager')->name('settings.password.update');
-    Route::post('/settings/manager', [SettingsController::class, 'storeManager'])->middleware('role:admin')->name('settings.manager.store');
-    Route::delete('/settings/manager/{user}', [SettingsController::class, 'destroyManager'])->middleware('role:admin')->name('settings.manager.destroy');
+
+    Route::post('/settings/profile', [SettingsController::class, 'updateProfile'])
+        ->middleware('role:admin,manager')
+        ->name('settings.profile.update');
+
+    Route::post('/settings/password', [SettingsController::class, 'updatePassword'])
+        ->middleware('role:admin,manager')
+        ->name('settings.password.update');
+
+    Route::post('/settings/manager', [SettingsController::class, 'storeManager'])
+        ->middleware('role:admin')
+        ->name('settings.manager.store');
+
+    Route::delete('/settings/manager/{user}', [SettingsController::class, 'destroyManager'])
+        ->middleware('role:admin')
+        ->name('settings.manager.destroy');
 });
