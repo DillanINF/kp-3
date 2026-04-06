@@ -22,7 +22,7 @@
         </div>
 
         <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div class="grid grid-cols-1 gap-4 p-5 lg:grid-cols-2">
+            <div class="grid grid-cols-1 gap-4 p-5 lg:grid-cols-3">
                 <div class="space-y-2">
                     <label class="text-sm font-semibold text-slate-700">Customer</label>
                     <input type="text" value="{{ $invoice->customer?->name }}" disabled class="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700 outline-none" />
@@ -31,6 +31,18 @@
                 <div class="space-y-2">
                     <label class="text-sm font-semibold text-slate-700">No PO</label>
                     <input name="po_no" value="{{ $invoice->po_no ?: ('PO-' . (string) ($invoice->invoice_no ?? '')) }}" type="text" readonly class="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700 outline-none" />
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-sm font-semibold text-slate-700">Pengirim</label>
+                    <select name="pengirim_id" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" required>
+                        <option value="">-- Pilih Pengirim --</option>
+                        @foreach($pengirims as $p)
+                            <option value="{{ $p->id }}" {{ (string) $invoice->pengirim_id === (string) $p->id ? 'selected' : '' }}>
+                                {{ $p->name }}
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
             </div>
 

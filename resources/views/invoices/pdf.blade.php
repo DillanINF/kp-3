@@ -224,6 +224,10 @@
                     <td class="meta-label">Customer</td>
                     <td class="meta-value">: {{ $invoice->customer?->name ?? '-' }}</td>
                 </tr>
+                <tr>
+                    <td class="meta-label">Pengirim</td>
+                    <td class="meta-value">: {{ $pengirim_name ?? '-' }}</td>
+                </tr>
             </table>
         </div>
 

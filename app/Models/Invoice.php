@@ -16,13 +16,13 @@ class Invoice extends Model
 
     protected $fillable = [
         'invoice_no',
-        'customer_id',
-        'date',
         'po_no',
-        'address',
+        'customer_id',
+        'pengirim_id',
+        'date',
+        'status',
         'grand_total',
         'qty_total',
-        'status',
     ];
 
     protected $casts = [
@@ -34,6 +34,11 @@ class Invoice extends Model
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function pengirim(): BelongsTo
+    {
+        return $this->belongsTo(Pengirim::class);
     }
 
     public function details(): HasMany

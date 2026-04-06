@@ -11,6 +11,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\SupplierRequestController;
+use App\Http\Controllers\PengirimController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 
@@ -133,14 +134,10 @@ Route::middleware('auth')->group(function () {
         Route::delete('/items-out/{itemOut}', [ItemOutController::class, 'destroy'])->middleware('role:admin')->name('items_out.destroy');
 
         // ================= 🔥 PENGIRIM (BARU) =================
-        Route::get('/pengirim', function () {
-            return view('masters.pengirim');
-        })->name('pengirim');
-
-        Route::post('/pengirim', function (Request $request) {
-            session(['nama_pengirim' => $request->nama_pengirim]);
-            return back()->with('success', 'Nama pengirim berhasil disimpan');
-        })->name('pengirim.store');
+        Route::get('/pengirim', [PengirimController::class, 'index'])->name('pengirim');
+        Route::post('/pengirim', [PengirimController::class, 'store'])->name('pengirim.store');
+        Route::put('/pengirim/{pengirim}', [PengirimController::class, 'update'])->name('pengirim.update');
+        Route::delete('/pengirim/{pengirim}', [PengirimController::class, 'destroy'])->name('pengirim.destroy');
     });
 
     /*

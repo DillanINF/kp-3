@@ -19,9 +19,9 @@ class InvoiceController extends Controller
     public function index()
     {
         $customers = Customer::query()->orderBy('name')->get();
+        $pengirims = \App\Models\Pengirim::query()->orderBy('name')->get();
         $invoices = Invoice::query()
-            ->with('customer')
-            ->with('approval')
+            ->with(['customer', 'pengirim', 'approval'])
             ->withCount('poPendingItems')
             ->orderByDesc('date')
             ->orderByDesc('id')
@@ -29,6 +29,7 @@ class InvoiceController extends Controller
 
         return view('invoices.index', [
             'customers' => $customers,
+            'pengirims' => $pengirims,
             'invoices' => $invoices,
         ]);
     }
@@ -89,6 +90,7 @@ class InvoiceController extends Controller
             return Invoice::query()->create([
                 'invoice_no' => $invoiceNo,
                 'customer_id' => $validated['customer_id'],
+                'pengirim_id' => null, // Will be set in input_po step
                 'date' => now()->toDateString(),
                 'status' => 'draft',
                 'grand_total' => 0,
@@ -103,10 +105,12 @@ class InvoiceController extends Controller
     {
         $invoice->load(['customer', 'details.item']);
         $items = Item::query()->where('item_type', 'regular')->orderBy('name')->get();
+        $pengirims = \App\Models\Pengirim::query()->orderBy('name')->get();
 
         return view('invoices.input_po', [
             'invoice' => $invoice,
             'items' => $items,
+            'pengirims' => $pengirims,
         ]);
     }
 
@@ -115,16 +119,19 @@ class InvoiceController extends Controller
         $invoice = Invoice::query()->where('invoice_no', $invoiceNo)->firstOrFail();
         $invoice->load(['customer', 'details.item']);
         $items = Item::query()->where('item_type', 'regular')->orderBy('name')->get();
+        $pengirims = \App\Models\Pengirim::query()->orderBy('name')->get();
 
         return view('invoices.input_po', [
             'invoice' => $invoice,
             'items' => $items,
+            'pengirims' => $pengirims,
         ]);
     }
 
     public function storePo(Request $request, Invoice $invoice)
     {
         $validated = $request->validate([
+            'pengirim_id' => ['required', 'integer', 'exists:pengirims,id'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.item_id' => ['required', 'integer', 'distinct', 'exists:items,id'],
             'items.*.qty' => ['required', 'integer', 'min:1'],
@@ -134,6 +141,8 @@ class InvoiceController extends Controller
         $result = DB::transaction(function () use ($invoice, $validated) {
             $invoice->refresh();
             $invoice->load('customer');
+
+            $invoice->pengirim_id = $validated['pengirim_id'];
 
             $poNo = (string) ($invoice->po_no ?: ('PO-' . (string) ($invoice->invoice_no ?? '')));
 
@@ -267,6 +276,7 @@ class InvoiceController extends Controller
             'poNo' => $poNo,
             'printedAt' => $printedAt,
             'printedBy' => $request->user(),
+            'pengirim_name' => $invoice->pengirim?->name ?? 'Admin',
             'details' => $details,
             'pending' => $pending,
             'deliveredTotal' => (int) $detailsTotal,

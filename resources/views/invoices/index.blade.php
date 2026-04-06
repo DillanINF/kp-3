@@ -117,6 +117,7 @@
                             <th class="px-4 py-3">Tanggal</th>
                             <th class="px-4 py-3">No Invoice</th>
                             <th class="px-4 py-3">Customer</th>
+                            <th class="px-4 py-3">Pengirim</th>
                             <th class="px-4 py-3">No PO</th>
                             <th class="px-4 py-3">Total PO</th>
                             <th class="px-4 py-3">Qty</th>
@@ -141,6 +142,11 @@
                                     <span class="inline-flex items-center justify-center rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-700">{{ $invoice->invoice_no }}</span>
                                 </td>
                                 <td class="px-4 py-3 text-slate-700">{{ $invoice->customer?->name ?? '-' }}</td>
+                                <td class="px-4 py-3 text-slate-700">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-800">
+                                        {{ $invoice->pengirim?->name ?? '-' }}
+                                    </span>
+                                </td>
                                 <td class="px-4 py-3 text-slate-500">{{ $invoice->po_no ?? '-' }}</td>
                                 <td class="px-4 py-3 text-slate-500">{{ $invoice->grand_total > 0 ? 'Rp ' . number_format($invoice->grand_total, 0, ',', '.') : '-' }}</td>
                                 <td class="px-4 py-3 text-slate-500">{{ $invoice->qty_total > 0 ? $invoice->qty_total : '-' }}</td>
@@ -227,9 +233,9 @@
                     @csrf
                     <div class="space-y-2">
                         <label class="text-sm font-semibold text-slate-700">Customer</label>
-                        <select name="customer_id" class="h-11 w-full rounded-xl border border-indigo-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
-                            <option value="">-- Pilih Customer --</option>
-                            @foreach($customers ?? [] as $customer)
+                        <select name="customer_id" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100" required>
+                            <option value="">Pilih Customer</option>
+                            @foreach ($customers as $customer)
                                 <option value="{{ $customer->id }}">{{ $customer->name }}</option>
                             @endforeach
                         </select>
