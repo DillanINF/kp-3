@@ -36,26 +36,30 @@ class InvoiceController extends Controller
 
     public function accept(Invoice $invoice)
     {
-        DB::transaction(function () use ($invoice) {
-            $invoice->refresh();
+        try {
+            DB::transaction(function () use ($invoice) {
+                $invoice->refresh();
 
-            $pendingCount = PoPendingItem::query()
-                ->where('invoice_id', $invoice->id)
-                ->count();
+                $pendingCount = PoPendingItem::query()
+                    ->where('invoice_id', $invoice->id)
+                    ->count();
 
-            if ($pendingCount > 0) {
-                abort(422, 'Masih ada PO belum terkirim. Selesaikan dulu sebelum Accept.');
-            }
+                if ($pendingCount > 0) {
+                    throw new \Exception('Masih ada PO belum terkirim. Selesaikan dulu sebelum Accept.');
+                }
 
-            $approval = InvoiceApproval::query()->firstOrNew([
-                'invoice_id' => $invoice->id,
-            ]);
-            $approval->status = 'accept';
-            $approval->accepted_at = now();
-            $approval->save();
-        });
+                $approval = InvoiceApproval::query()->firstOrNew([
+                    'invoice_id' => $invoice->id,
+                ]);
+                $approval->status = 'accept';
+                $approval->accepted_at = now();
+                $approval->save();
+            });
 
-        return redirect()->route('invoices.index')->with('success', 'Invoice berhasil di-Accept.');
+            return redirect()->route('invoices.index')->with('success', 'Invoice berhasil di-Accept.');
+        } catch (\Exception $e) {
+            return redirect()->route('invoices.index')->with('error', $e->getMessage());
+        }
     }
 
     public function store(Request $request)
@@ -132,122 +136,130 @@ class InvoiceController extends Controller
     {
         $validated = $request->validate([
             'pengirim_id' => ['required', 'integer', 'exists:pengirims,id'],
+            'delivery_date' => ['required', 'date'],
+            'address' => ['required', 'string'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.item_id' => ['required', 'integer', 'distinct', 'exists:items,id'],
             'items.*.qty' => ['required', 'integer', 'min:1'],
             'items.*.price' => ['required', 'integer', 'min:0'],
         ]);
 
-        $result = DB::transaction(function () use ($invoice, $validated) {
-            $invoice->refresh();
-            $invoice->load('customer');
+        try {
+            $result = DB::transaction(function () use ($invoice, $validated) {
+                $invoice->refresh();
+                $invoice->load('customer');
 
-            $invoice->pengirim_id = $validated['pengirim_id'];
+                $invoice->pengirim_id = $validated['pengirim_id'];
+                $invoice->delivery_date = $validated['delivery_date'];
+                $invoice->address = $validated['address'];
 
-            $poNo = (string) ($invoice->po_no ?: ('PO-' . (string) ($invoice->invoice_no ?? '')));
+                $poNo = (string) ($invoice->po_no ?: ('PO-' . (string) ($invoice->invoice_no ?? '')));
 
-            $hasPending = false;
-            $totalPendingQty = 0;
+                $hasPending = false;
+                $totalPendingQty = 0;
 
-            if ($invoice->status !== 'draft') {
-                abort(422, 'Invoice sudah diproses dan tidak bisa diubah.');
-            }
-
-            InvoiceDetail::query()->where('invoice_id', $invoice->id)->delete();
-
-            $grandTotal = 0;
-            $qtyTotal = 0;
-
-            foreach ($validated['items'] as $row) {
-                $itemId = (int) $row['item_id'];
-                $qty = (int) $row['qty'];
-                $price = (int) $row['price'];
-
-                $item = Item::query()->lockForUpdate()->findOrFail($itemId);
-                if ($item->item_type !== 'regular') {
-                    abort(422, 'Barang yang dipilih tidak valid untuk invoice.');
+                if ($invoice->status !== 'draft') {
+                    throw new \Exception('Invoice sudah diproses dan tidak bisa diubah.');
                 }
 
-                $buyPrice = (int) (SupplierItem::query()
-                    ->where('item_id', $item->id)
-                    ->orderBy('buy_price')
-                    ->value('buy_price') ?? 0);
+                InvoiceDetail::query()->where('invoice_id', $invoice->id)->delete();
 
-                $sellPrice = (int) ($item->price ?? 0);
+                $grandTotal = 0;
+                $qtyTotal = 0;
 
-                $deliverQty = min((int) ($item->stock ?? 0), $qty);
-                $pendingQty = max(0, $qty - $deliverQty);
+                foreach ($validated['items'] as $row) {
+                    $itemId = (int) $row['item_id'];
+                    $qty = (int) $row['qty'];
+                    $price = (int) $row['price'];
 
-                if ($pendingQty > 0) {
-                    $hasPending = true;
-                    $totalPendingQty += $pendingQty;
-                    PoPendingItem::query()->create([
+                    $item = Item::query()->lockForUpdate()->findOrFail($itemId);
+                    if ($item->item_type !== 'regular') {
+                        throw new \Exception('Barang yang dipilih tidak valid untuk invoice.');
+                    }
+
+                    $buyPrice = (int) (SupplierItem::query()
+                        ->where('item_id', $item->id)
+                        ->orderBy('buy_price')
+                        ->value('buy_price') ?? 0);
+
+                    $sellPrice = (int) ($item->price ?? 0);
+
+                    $deliverQty = min((int) ($item->stock ?? 0), $qty);
+                    $pendingQty = max(0, $qty - $deliverQty);
+
+                    if ($pendingQty > 0) {
+                        $hasPending = true;
+                        $totalPendingQty += $pendingQty;
+                        PoPendingItem::query()->create([
+                            'invoice_id' => $invoice->id,
+                            'invoice_no' => $invoice->invoice_no,
+                            'po_no' => $poNo,
+                            'customer_id' => $invoice->customer_id,
+                            'item_id' => $itemId,
+                            'qty' => $pendingQty,
+                            'price' => $price,
+                            'status' => 'pending',
+                        ]);
+                    }
+
+                    if ($deliverQty <= 0) {
+                        continue;
+                    }
+
+                    $total = $deliverQty * $price;
+
+                    InvoiceDetail::query()->create([
                         'invoice_id' => $invoice->id,
-                        'invoice_no' => $invoice->invoice_no,
-                        'po_no' => $poNo,
+                        'item_id' => $itemId,
+                        'qty' => $deliverQty,
+                        'price' => $price,
+                        'total' => $total,
+                    ]);
+
+                    $item->decrement('stock', $deliverQty);
+
+                    ItemOut::query()->create([
+                        'type' => 'sale',
                         'customer_id' => $invoice->customer_id,
                         'item_id' => $itemId,
-                        'qty' => $pendingQty,
-                        'price' => $price,
-                        'status' => 'pending',
+                        'qty' => $deliverQty,
+                        'date' => $invoice->date,
+                        'buy_price' => $buyPrice,
+                        'sell_price' => $sellPrice,
                     ]);
+
+                    $grandTotal += $total;
+                    $qtyTotal += $deliverQty;
                 }
 
-                if ($deliverQty <= 0) {
-                    continue;
+                $invoice->po_no = $poNo;
+                $invoice->grand_total = $grandTotal;
+                $invoice->qty_total = $qtyTotal;
+                $invoice->status = $qtyTotal > 0 ? 'posted' : 'draft';
+                $invoice->save();
+
+                return [
+                    'has_pending' => $hasPending,
+                    'total_pending_qty' => $totalPendingQty,
+                ];
+            });
+
+            if (!empty($result['has_pending'])) {
+                $pendingQty = (int) ($result['total_pending_qty'] ?? 0);
+                $msg = '⚠️ PERHATIAN: Stok tidak mencukupi! ';
+                if ($pendingQty > 0) {
+                    $msg .= 'Sebanyak ' . $pendingQty . ' unit otomatis masuk ke daftar "PO Belum Terkirim".';
+                } else {
+                    $msg .= 'Sisa pesanan otomatis masuk ke menu PO Belum Terkirim.';
                 }
 
-                $total = $deliverQty * $price;
-
-                InvoiceDetail::query()->create([
-                    'invoice_id' => $invoice->id,
-                    'item_id' => $itemId,
-                    'qty' => $deliverQty,
-                    'price' => $price,
-                    'total' => $total,
-                ]);
-
-                $item->decrement('stock', $deliverQty);
-
-                ItemOut::query()->create([
-                    'type' => 'sale',
-                    'customer_id' => $invoice->customer_id,
-                    'item_id' => $itemId,
-                    'qty' => $deliverQty,
-                    'date' => $invoice->date,
-                    'buy_price' => $buyPrice,
-                    'sell_price' => $sellPrice,
-                ]);
-
-                $grandTotal += $total;
-                $qtyTotal += $deliverQty;
+                return redirect()->route('invoices.index')->with('warning', $msg);
             }
 
-            $invoice->po_no = $poNo;
-            $invoice->grand_total = $grandTotal;
-            $invoice->qty_total = $qtyTotal;
-            $invoice->status = $qtyTotal > 0 ? 'posted' : 'draft';
-            $invoice->save();
-
-            return [
-                'has_pending' => $hasPending,
-                'total_pending_qty' => $totalPendingQty,
-            ];
-        });
-
-        if (!empty($result['has_pending'])) {
-            $pendingQty = (int) ($result['total_pending_qty'] ?? 0);
-            $msg = 'Qty yang kamu input melebihi stok. ';
-            if ($pendingQty > 0) {
-                $msg .= 'Sisa pesanan ' . $pendingQty . ' pcs otomatis masuk ke menu PO Belum Terkirim.';
-            } else {
-                $msg .= 'Sisa pesanan otomatis masuk ke menu PO Belum Terkirim.';
-            }
-
-            return redirect()->route('invoices.index')->with('warning', $msg);
+            return redirect()->route('invoices.index')->with('success', 'PO berhasil disimpan.');
+        } catch (\Exception $e) {
+            return redirect()->route('invoices.index')->with('error', $e->getMessage());
         }
-
-        return redirect()->route('invoices.index')->with('success', 'PO berhasil disimpan.');
     }
 
     public function pdf(Request $request, Invoice $invoice)
@@ -286,6 +298,10 @@ class InvoiceController extends Controller
         ])->setPaper('a4', 'portrait');
 
         $filename = 'invoice-' . (string) ($invoice->invoice_no ?? $invoice->id) . '.pdf';
+
+        if ($request->has('preview')) {
+            return $pdf->stream($filename);
+        }
 
         return $pdf->download($filename);
     }
@@ -439,31 +455,35 @@ class InvoiceController extends Controller
 
     public function destroy(Invoice $invoice)
     {
-        DB::transaction(function () use ($invoice) {
-            $invoice->refresh();
+        try {
+            DB::transaction(function () use ($invoice) {
+                $invoice->refresh();
 
-            $pendingCount = PoPendingItem::query()
-                ->where('invoice_id', $invoice->id)
-                ->count();
-            if ($pendingCount > 0) {
-                abort(422, 'Invoice tidak bisa dihapus karena masih ada data di PO Belum Terkirim.');
-            }
+                $pendingCount = PoPendingItem::query()
+                    ->where('invoice_id', $invoice->id)
+                    ->count();
+                if ($pendingCount > 0) {
+                    throw new \Exception('Invoice tidak bisa dihapus karena masih ada data di PO Belum Terkirim.');
+                }
 
-            $approvalStatus = InvoiceApproval::query()
-                ->where('invoice_id', $invoice->id)
-                ->value('status');
-            if (($approvalStatus ?? 'pending') === 'accept') {
-                abort(422, 'Invoice yang sudah Accept tidak bisa dihapus.');
-            }
+                $approvalStatus = InvoiceApproval::query()
+                    ->where('invoice_id', $invoice->id)
+                    ->value('status');
+                if (($approvalStatus ?? 'pending') === 'accept') {
+                    throw new \Exception('Invoice yang sudah Accept tidak bisa dihapus.');
+                }
 
-            if (($invoice->status ?? '') !== 'draft') {
-                abort(422, 'Invoice yang sudah diproses tidak bisa dihapus.');
-            }
+                if (($invoice->status ?? '') !== 'draft') {
+                    throw new \Exception('Invoice yang sudah diproses tidak bisa dihapus.');
+                }
 
-            InvoiceDetail::query()->where('invoice_id', $invoice->id)->delete();
-            $invoice->delete();
-        });
+                InvoiceDetail::query()->where('invoice_id', $invoice->id)->delete();
+                $invoice->delete();
+            });
 
-        return redirect()->route('invoices.index');
+            return redirect()->route('invoices.index')->with('success', 'Invoice berhasil dihapus.');
+        } catch (\Exception $e) {
+            return redirect()->route('invoices.index')->with('error', $e->getMessage());
+        }
     }
 }

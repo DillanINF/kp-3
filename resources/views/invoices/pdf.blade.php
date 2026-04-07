@@ -205,28 +205,31 @@
 
         <!-- INFO -->
         <div class="box">
-            <table class="meta">
+            <table class="meta" style="width: 100%; border-collapse: collapse;">
                 <tr>
-                    <td class="meta-label">No Invoice</td>
-                    <td class="meta-value">: {{ $invoice->invoice_no ?? '-' }}</td>
+                    <td class="meta-label" style="width: 100px;">No Invoice</td>
+                    <td class="meta-value" style="width: 180px;">: {{ $invoice->invoice_no ?? '-' }}</td>
+                    <td class="meta-label" style="width: 80px; padding-left: 30px;">Customer</td>
+                    <td class="meta-value">: {{ $invoice->customer?->name ?? '-' }}</td>
                 </tr>
                 <tr>
                     <td class="meta-label">No PO</td>
                     <td class="meta-value">: {{ $poNo ?? '-' }}</td>
+                    <td class="meta-label" style="padding-left: 30px; vertical-align: top;">Alamat Customer
+                    <td class="meta-value" style="vertical-align: top;">: {{ $invoice->address ?? '-' }}</td>
                 </tr>
+               
                 <tr>
-                    <td class="meta-label">Tanggal</td>
-                    <td class="meta-value">
-                        : {{ $invoice->date ? $invoice->date->format('d/m/Y') : '-' }}
-                    </td>
-                </tr>
-                <tr>
-                    <td class="meta-label">Customer</td>
-                    <td class="meta-value">: {{ $invoice->customer?->name ?? '-' }}</td>
+                    <td class="meta-label">Tgl. Kirim</td>
+                    <td class="meta-value">: {{ $invoice->delivery_date ? $invoice->delivery_date->format('d/m/Y') : '-' }}</td>
+                    <td></td>
+                    <td></td>
                 </tr>
                 <tr>
                     <td class="meta-label">Pengirim</td>
                     <td class="meta-value">: {{ $pengirim_name ?? '-' }}</td>
+                    <td></td>
+                    <td></td>
                 </tr>
             </table>
         </div>

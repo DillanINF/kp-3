@@ -328,11 +328,11 @@ const buildPoItemRow = (item = {}) => {
     tr.setAttribute('data-po-item-row', '');
     tr.innerHTML = `
         <td class="px-4 py-3">
-            <select data-po-item-id class="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"></select>
+            <select data-po-item-id class="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" onchange="typeof updatePrice === 'function' ? updatePrice(this) : null"></select>
         </td>
         <td class="px-4 py-3">
             <div class="grid grid-cols-[1fr_84px] gap-2">
-                <input data-po-item-qty type="number" min="0" step="1" placeholder="0" class="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" />
+                <input data-po-item-qty type="number" min="1" step="1" placeholder="1" class="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" />
                 <input data-po-item-unit type="text" value="pcs" disabled class="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700 outline-none" />
             </div>
         </td>

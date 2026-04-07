@@ -20,6 +20,8 @@ class Invoice extends Model
         'customer_id',
         'pengirim_id',
         'date',
+        'delivery_date',
+        'address',
         'status',
         'grand_total',
         'qty_total',
@@ -27,6 +29,7 @@ class Invoice extends Model
 
     protected $casts = [
         'date' => 'date',
+        'delivery_date' => 'date',
         'grand_total' => 'integer',
         'qty_total' => 'integer',
     ];

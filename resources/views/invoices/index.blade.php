@@ -10,17 +10,17 @@
             $isAdmin = auth()->check() && (auth()->user()?->role === 'admin');
         @endphp
 
-        @if(session('success'))
+        @if(false && session('success'))
             <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
                 {{ session('success') }}
             </div>
         @endif
-        @if(session('warning'))
+        @if(false && session('warning'))
             <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
                 {{ session('warning') }}
             </div>
         @endif
-        @if(session('error'))
+        @if(false && session('error'))
             <div class="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
                 {{ session('error') }}
             </div>
@@ -114,13 +114,16 @@
                 <table class="w-full text-left text-sm">
                     <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-600">
                         <tr>
-                            <th class="px-4 py-3">Tanggal</th>
+                            <th class="px-4 py-3">Tgl. Invoice</th>
+                            <th class="px-4 py-3">Tgl. Kirim</th>
                             <th class="px-4 py-3">No Invoice</th>
                             <th class="px-4 py-3">Customer</th>
+                            <th class="px-4 py-3">Alamat Kirim</th>
                             <th class="px-4 py-3">Pengirim</th>
                             <th class="px-4 py-3">No PO</th>
                             <th class="px-4 py-3">Total PO</th>
                             <th class="px-4 py-3">Qty</th>
+                            <th class="px-4 py-3">Status</th>
                             @if($isAdmin)
                                 <th class="px-4 py-3 text-center">Aksi</th>
                             @endif
@@ -138,10 +141,24 @@
                             @endphp
                             <tr class="transition-colors hover:bg-indigo-50 {{ $isAdmin && ($invoice->status ?? '') === 'draft' ? 'cursor-pointer' : '' }}" data-po-editable="{{ $isAdmin && ($invoice->status ?? '') === 'draft' ? '1' : '0' }}" data-input-po-href="{{ route('invoices.input_po_by_no', ['invoiceNo' => $invoice->invoice_no]) }}" data-invoice-no-str="{{ $invoice->invoice_no }}" data-invoice-id="{{ $invoice->id }}" data-invoice-no="{{ (int) preg_replace('/\D+/', '', (string) $invoice->invoice_no) }}">
                                 <td class="px-4 py-3 text-slate-700">{{ optional($invoice->date)->format('d/m/Y') }}</td>
+                                <td class="px-4 py-3 text-slate-700">
+                                    @if($invoice->delivery_date)
+                                        <span class="inline-flex items-center gap-1.5 rounded-md bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10">
+                                            {{ $invoice->delivery_date->format('d/m/Y') }}
+                                        </span>
+                                    @else
+                                        <span class="text-slate-400 italic text-xs">- belum diset -</span>
+                                    @endif
+                                </td>
                                 <td class="px-4 py-3">
                                     <span class="inline-flex items-center justify-center rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-700">{{ $invoice->invoice_no }}</span>
                                 </td>
                                 <td class="px-4 py-3 text-slate-700">{{ $invoice->customer?->name ?? '-' }}</td>
+                                <td class="px-4 py-3 text-slate-500">
+                                    <div class="max-w-[200px] truncate" title="{{ $invoice->address }}">
+                                        {{ $invoice->address ?? '-' }}
+                                    </div>
+                                </td>
                                 <td class="px-4 py-3 text-slate-700">
                                     <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-800">
                                         {{ $invoice->pengirim?->name ?? '-' }}
@@ -150,9 +167,35 @@
                                 <td class="px-4 py-3 text-slate-500">{{ $invoice->po_no ?? '-' }}</td>
                                 <td class="px-4 py-3 text-slate-500">{{ $invoice->grand_total > 0 ? 'Rp ' . number_format($invoice->grand_total, 0, ',', '.') : '-' }}</td>
                                 <td class="px-4 py-3 text-slate-500">{{ $invoice->qty_total > 0 ? $invoice->qty_total : '-' }}</td>
+                                <td class="px-4 py-3">
+                                    @php
+                                        $status = $invoice->approval?->status ?? 'pending';
+                                        $canDelete = ($status === 'pending');
+                                    @endphp
+                                    @if($status === 'accept')
+                                        <span class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+                                            ACCEPTED
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center rounded-full bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20">
+                                            PENDING
+                                        </span>
+                                    @endif
+                                </td>
                                 @if($isAdmin)
                                     <td class="px-4 py-3 text-center">
                                         <div class="inline-flex items-center justify-center gap-2">
+                                            <button type="button"
+                                                data-open-modal="modal-preview-pdf"
+                                                data-pdf-url="{{ route('invoices.pdf', $invoice) }}?preview=1"
+                                                class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                                                title="Preview PDF">
+                                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4">
+                                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                    <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                </svg>
+                                            </button>
+
                                             <a href="{{ route('invoices.pdf', $invoice) }}" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100" aria-label="PDF" title="Download PDF">
                                                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4">
                                                     <path d="M7 3H14L18 7V21H7V3Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
@@ -162,10 +205,10 @@
                                                 </svg>
                                             </a>
 
-                                            <form action="{{ route('invoices.destroy', $invoice) }}" method="POST" onsubmit="return {{ $isEmpty ? "confirm('Hapus invoice ini?')" : 'false' }}" class="inline-flex">
+                                            <form action="{{ route('invoices.destroy', $invoice) }}" method="POST" onsubmit="return {{ $canDelete ? "confirm('Hapus invoice ini?')" : 'false' }}" class="inline-flex">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" data-action="delete-invoice" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border {{ $isEmpty ? 'border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100' : 'border-slate-200 bg-slate-50 text-slate-400 cursor-not-allowed' }}" aria-label="Hapus" {{ $isEmpty ? '' : 'disabled' }}>
+                                                <button type="submit" data-action="delete-invoice" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border {{ $canDelete ? 'border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100' : 'border-slate-200 bg-slate-50 text-slate-400 cursor-not-allowed' }}" aria-label="Hapus" {{ $canDelete ? '' : 'disabled' }} title="{{ $canDelete ? 'Hapus' : 'Invoice sudah di-Accept, tidak bisa dihapus' }}">
                                                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4">
                                                         <path d="M3 6H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                                                         <path d="M8 6V4H16V6" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
@@ -218,10 +261,50 @@
                     window.location.href = String(href);
                 }
             });
+
+            document.addEventListener('click', function (e) {
+                const previewBtn = e.target.closest('[data-open-modal="modal-preview-pdf"]');
+                if (previewBtn) {
+                    const pdfUrl = previewBtn.getAttribute('data-pdf-url');
+                    const iframe = document.getElementById('pdf-preview-frame');
+                    if (iframe && pdfUrl) {
+                        iframe.src = pdfUrl;
+                    }
+                }
+
+                const closePreviewBtn = e.target.closest('[data-close-modal="modal-preview-pdf"]');
+                if (closePreviewBtn) {
+                    const iframe = document.getElementById('pdf-preview-frame');
+                    if (iframe) {
+                        iframe.src = '';
+                    }
+                }
+            });
         })();
     </script>
 
     @if($isAdmin)
+        <div id="modal-preview-pdf" data-modal class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 p-4">
+            <div class="w-full max-w-5xl h-[90vh] overflow-hidden rounded-2xl bg-white shadow-xl flex flex-col">
+                <div class="bg-slate-900 px-6 py-4 flex items-center justify-between">
+                    <div class="text-lg font-semibold text-white">Preview PDF Invoice</div>
+                    <button type="button" data-close-modal="modal-preview-pdf" class="text-slate-400 hover:text-white transition-colors">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="flex-1 bg-slate-100 p-4">
+                    <iframe id="pdf-preview-frame" src="" class="w-full h-full rounded-lg border border-slate-200 bg-white" frameborder="0"></iframe>
+                </div>
+
+                <div class="flex items-center justify-end gap-2 px-6 py-4 border-t border-slate-200">
+                    <button type="button" data-close-modal="modal-preview-pdf" class="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-6 text-sm font-semibold text-slate-700 hover:bg-slate-50">Tutup</button>
+                </div>
+            </div>
+        </div>
+
         <div id="modal-tambah-invoice" data-modal class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 p-4">
             <div class="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-xl">
                 <div class="bg-indigo-600 px-6 py-5">

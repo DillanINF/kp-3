@@ -22,7 +22,7 @@
         </div>
 
         <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div class="grid grid-cols-1 gap-4 p-5 lg:grid-cols-3">
+            <div class="grid grid-cols-1 gap-4 p-5 lg:grid-cols-2">
                 <div class="space-y-2">
                     <label class="text-sm font-semibold text-slate-700">Customer</label>
                     <input type="text" value="{{ $invoice->customer?->name }}" disabled class="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700 outline-none" />
@@ -31,6 +31,11 @@
                 <div class="space-y-2">
                     <label class="text-sm font-semibold text-slate-700">No PO</label>
                     <input name="po_no" value="{{ $invoice->po_no ?: ('PO-' . (string) ($invoice->invoice_no ?? '')) }}" type="text" readonly class="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700 outline-none" />
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-sm font-semibold text-slate-700">Tanggal Kirim</label>
+                    <input name="delivery_date" value="{{ $invoice->delivery_date ? $invoice->delivery_date->format('Y-m-d') : date('Y-m-d') }}" type="date" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" required />
                 </div>
 
                 <div class="space-y-2">
@@ -43,6 +48,11 @@
                             </option>
                         @endforeach
                     </select>
+                </div>
+
+                <div class="col-span-full space-y-2">
+                    <label class="text-sm font-semibold text-slate-700">Alamat Customer</label>
+                    <textarea name="address" rows="3" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" placeholder="Masukkan alamat lengkap pengiriman..." required>{{ $invoice->address ?: $invoice->customer?->address }}</textarea>
                 </div>
             </div>
 
@@ -89,8 +99,9 @@
                                                 value="{{ $item->id }}" 
                                                 data-unit="{{ $item->unit }}" 
                                                 data-price="{{ $item->price }}"
+                                                data-stock="{{ $item->stock }}"
                                                 {{ (string) ($row['item_id'] ?? '') === (string) $item->id ? 'selected' : '' }}>
-                                                {{ $item->name }}
+                                                {{ $item->name }} (Stok: {{ $item->stock }})
                                             </option>
                                         @endforeach
                                     </select>

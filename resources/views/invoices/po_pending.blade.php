@@ -34,72 +34,92 @@
         <div class="overflow-x-auto">
             <table class="w-full text-left text-sm">
                 <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-600">
-                    <tr>
-                        <th class="px-4 py-3">Tanggal</th>
-                        <th class="px-4 py-3">No Invoice</th>
-                        <th class="px-4 py-3">No PO</th>
-                        <th class="px-4 py-3">Customer</th>
-                        <th class="px-4 py-3">Barang</th>
-                        <th class="px-4 py-3">Qty</th>
-                        <th class="px-4 py-3">Harga</th>
-                        <th class="px-4 py-3">Status</th>
-                        @if($isAdmin)
-                            <th class="px-4 py-3 text-center">Aksi</th>
-                            <th class="px-4 py-3 text-center">Kirim</th>
-                        @endif
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-200">
-                    @forelse(($rows ?? []) as $row)
                         <tr>
-                            <td class="px-4 py-3 text-slate-600">{{ optional($row->created_at)->timezone(config('app.timezone'))->format('Y-m-d H:i:s') }}</td>
-                            <td class="px-4 py-3 font-medium text-slate-900">{{ $row->invoice_no ?? $row->invoice?->invoice_no ?? '-' }}</td>
-                            <td class="px-4 py-3 text-slate-700">{{ $row->po_no ?? $row->invoice?->po_no ?? '-' }}</td>
-                            <td class="px-4 py-3 text-slate-700">{{ $row->customer?->name ?? '-' }}</td>
-                            <td class="px-4 py-3 text-slate-700">{{ $row->item?->name ?? '-' }}</td>
-                            <td class="px-4 py-3 text-slate-700">{{ $row->qty }}</td>
-                            <td class="px-4 py-3 text-slate-700">Rp {{ number_format((int) $row->price, 0, ',', '.') }}</td>
-                            <td class="px-4 py-3">
-                                <span class="inline-flex rounded-full bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700">{{ strtoupper($row->status ?? 'pending') }}</span>
-                            </td>
+                            <th class="px-4 py-3">Tanggal</th>
+                            <th class="px-4 py-3">No Invoice</th>
+                            <th class="px-4 py-3">No PO</th>
+                            <th class="px-4 py-3">Customer</th>
+                            <th class="px-4 py-3">Barang</th>
+                            <th class="px-4 py-3">Qty</th>
+                            <th class="px-4 py-3">Harga</th>
+                            <th class="px-4 py-3">Status</th>
                             @if($isAdmin)
-                                <td class="px-4 py-3 text-center">
-                                    <div class="inline-flex items-center justify-center gap-2">
-                                        <button type="button" data-pending-edit data-id="{{ $row->id }}" data-qty="{{ $row->qty }}" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50" aria-label="Edit Qty">
-                                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4">
-                                                <path d="M12 20H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                                                <path d="M16.5 3.5C17.3284 2.67157 18.6716 2.67157 19.5 3.5C20.3284 4.32843 20.3284 5.67157 19.5 6.5L8 18L3 19L4 14L16.5 3.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
-                                            </svg>
-                                        </button>
+                                <th class="px-4 py-3 text-center">Aksi</th>
+                                <th class="px-4 py-3 text-center">Kirim</th>
+                            @endif
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200">
+                        @forelse(($rows ?? []) as $row)
+                            <tr class="group hover:bg-slate-50 transition-colors">
+                                <td class="px-4 py-3 text-slate-600">{{ optional($row->created_at)->timezone(config('app.timezone'))->format('Y-m-d H:i:s') }}</td>
+                                <td class="px-4 py-3 font-medium text-slate-900">
+                                    <div class="flex flex-col">
+                                        <span>{{ $row->invoice_no ?? $row->invoice?->invoice_no ?? '-' }}</span>
+                                        @if($row->invoice)
+                                            <span class="text-[10px] text-slate-400 font-normal">ID: {{ $row->invoice->id }}</span>
+                                        @endif
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3 text-slate-700">{{ $row->po_no ?? $row->invoice?->po_no ?? '-' }}</td>
+                                <td class="px-4 py-3 text-slate-700">{{ $row->customer?->name ?? '-' }}</td>
+                                <td class="px-4 py-3 text-slate-700">{{ $row->item?->name ?? '-' }}</td>
+                                <td class="px-4 py-3 text-slate-700">{{ $row->qty }}</td>
+                                <td class="px-4 py-3 text-slate-700">Rp {{ number_format((int) $row->price, 0, ',', '.') }}</td>
+                                <td class="px-4 py-3">
+                                    <span class="inline-flex rounded-full bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700">{{ strtoupper($row->status ?? 'pending') }}</span>
+                                </td>
+                                @if($isAdmin)
+                                    <td class="px-4 py-3 text-center">
+                                        <div class="inline-flex items-center justify-center gap-2">
+                                            @if($row->invoice)
+                                                <button type="button"
+                                                    data-open-modal="modal-preview-pdf"
+                                                    data-pdf-url="{{ route('invoices.pdf', $row->invoice) }}?preview=1"
+                                                    class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                                                    title="Preview PDF Invoice">
+                                                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4">
+                                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                        <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                    </svg>
+                                                </button>
+                                            @endif
 
-                                        <form action="{{ route('invoices.po_pending.destroy', ['pending' => $row->id]) }}" method="POST" class="inline-flex" onsubmit="return confirm('Hapus data pending ini?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100" aria-label="Hapus">
+                                            <button type="button" data-pending-edit data-id="{{ $row->id }}" data-qty="{{ $row->qty }}" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50" aria-label="Edit Qty">
                                                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4">
-                                                    <path d="M3 6H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                                                    <path d="M8 6V4H16V6" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
-                                                    <path d="M19 6L18 20H6L5 6" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
-                                                    <path d="M10 11V17" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                                                    <path d="M14 11V17" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                                                    <path d="M12 20H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                                                    <path d="M16.5 3.5C17.3284 2.67157 18.6716 2.67157 19.5 3.5C20.3284 4.32843 20.3284 5.67157 19.5 6.5L8 18L3 19L4 14L16.5 3.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+                                                </svg>
+                                            </button>
+
+                                            <form action="{{ route('invoices.po_pending.destroy', ['pending' => $row->id]) }}" method="POST" class="inline-flex" onsubmit="return confirm('Hapus data pending ini?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100" aria-label="Hapus">
+                                                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4">
+                                                        <path d="M3 6H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                                                        <path d="M8 6V4H16V6" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+                                                        <path d="M19 6L18 20H6L5 6" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+                                                        <path d="M10 11V17" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                                                        <path d="M14 11V17" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                                                    </svg>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3 text-center">
+                                        <form action="{{ route('invoices.po_pending.fulfill', ['pending' => $row->id]) }}" method="POST" class="inline-flex">
+                                            @csrf
+                                            <button type="submit" class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 text-white hover:bg-indigo-700" aria-label="Kirim Otomatis" onclick="return confirm('Kirim otomatis sisa PO ini?')">
+                                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4">
+                                                    <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                                    <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
                                                 </svg>
                                             </button>
                                         </form>
-                                    </div>
-                                </td>
-                                <td class="px-4 py-3 text-center">
-                                    <form action="{{ route('invoices.po_pending.fulfill', ['pending' => $row->id]) }}" method="POST" class="inline-flex">
-                                        @csrf
-                                        <button type="submit" class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 text-white hover:bg-indigo-700" aria-label="Kirim Otomatis" onclick="return confirm('Kirim otomatis sisa PO ini?')">
-                                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4">
-                                                <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                                <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
-                                            </svg>
-                                        </button>
-                                    </form>
-                                </td>
-                            @endif
-                        </tr>
+                                    </td>
+                                @endif
+                            </tr>
                     @empty
                         <tr>
                             <td colspan="{{ $isAdmin ? 10 : 8 }}" class="px-4 py-6 text-center text-sm text-slate-500">Belum ada PO yang belum terkirim.</td>
@@ -111,6 +131,27 @@
     </div>
 
     @if($isAdmin)
+        <div id="modal-preview-pdf" data-modal class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 p-4">
+            <div class="w-full max-w-5xl h-[90vh] overflow-hidden rounded-2xl bg-white shadow-xl flex flex-col">
+                <div class="bg-slate-900 px-6 py-4 flex items-center justify-between">
+                    <div class="text-lg font-semibold text-white">Preview PDF Invoice</div>
+                    <button type="button" data-close-modal="modal-preview-pdf" class="text-slate-400 hover:text-white transition-colors">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="flex-1 bg-slate-100 p-4">
+                    <iframe id="pdf-preview-frame" src="" class="w-full h-full rounded-lg border border-slate-200 bg-white" frameborder="0"></iframe>
+                </div>
+
+                <div class="flex items-center justify-end gap-2 px-6 py-4 border-t border-slate-200">
+                    <button type="button" data-close-modal="modal-preview-pdf" class="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-6 text-sm font-semibold text-slate-700 hover:bg-slate-50">Tutup</button>
+                </div>
+            </div>
+        </div>
+
         <div id="modal-edit-po-pending" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 p-4" data-pending-modal>
             <div class="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-xl">
                 <div class="bg-slate-900 px-6 py-5">
@@ -154,6 +195,35 @@
                 };
 
                 document.addEventListener('click', (e) => {
+                    const previewBtn = e.target.closest('[data-open-modal="modal-preview-pdf"]');
+                    if (previewBtn) {
+                        const pdfUrl = previewBtn.getAttribute('data-pdf-url');
+                        const iframe = document.getElementById('pdf-preview-frame');
+                        const modalPreview = document.getElementById('modal-preview-pdf');
+                        if (iframe && pdfUrl) {
+                            iframe.src = pdfUrl;
+                        }
+                        if (modalPreview) {
+                            modalPreview.classList.remove('hidden');
+                            modalPreview.classList.add('flex');
+                        }
+                        return;
+                    }
+
+                    const closePreviewBtn = e.target.closest('[data-close-modal="modal-preview-pdf"]');
+                    if (closePreviewBtn) {
+                        const iframe = document.getElementById('pdf-preview-frame');
+                        const modalPreview = document.getElementById('modal-preview-pdf');
+                        if (iframe) {
+                            iframe.src = '';
+                        }
+                        if (modalPreview) {
+                            modalPreview.classList.add('hidden');
+                            modalPreview.classList.remove('flex');
+                        }
+                        return;
+                    }
+
                     const editBtn = e.target.closest('[data-pending-edit]');
                     if (editBtn) {
                         const id = editBtn.getAttribute('data-id');
