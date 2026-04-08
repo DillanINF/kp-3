@@ -13,6 +13,7 @@
                 <table class="w-full text-left text-sm">
                     <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-600">
                         <tr>
+                            <th class="px-4 py-3 text-center w-12">No</th>
                             <th class="px-4 py-3">Tanggal</th>
                             <th class="px-4 py-3">Supplier</th>
                             <th class="px-4 py-3">Barang</th>
@@ -29,6 +30,7 @@
                                 $subtotal = (int) ($price * (int) ($row->qty ?? 0));
                             @endphp
                             <tr>
+                                <td class="px-4 py-3 text-center text-slate-500">{{ $loop->iteration + (($history->currentPage() - 1) * $history->perPage()) }}</td>
                                 <td class="px-4 py-3 text-slate-600">{{ $row->created_at?->timezone(config('app.timezone'))->format('d/m/Y H:i:s') }}</td>
                                 <td class="px-4 py-3 text-slate-700">{{ $row->supplier?->name }}</td>
                                 <td class="px-4 py-3 text-slate-700">{{ $row->item?->name }}</td>
@@ -37,7 +39,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="px-4 py-6 text-center text-sm text-slate-500">Belum ada data barang masuk.</td>
+                                <td colspan="6" class="px-4 py-6 text-center text-sm text-slate-500">Belum ada data barang masuk.</td>
                             </tr>
                         @endforelse
                     </tbody>

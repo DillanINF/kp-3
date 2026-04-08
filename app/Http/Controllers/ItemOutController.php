@@ -30,7 +30,8 @@ class ItemOutController extends Controller
             ->whereBetween('date', [$periodStart->toDateString(), $periodEnd->toDateString()])
             ->orderByDesc('date')
             ->orderByDesc('id')
-            ->get();
+            ->paginate(5)
+            ->withQueryString();
 
         $salesInvoices = Invoice::query()
             ->with(['customer', 'details.item'])
@@ -38,7 +39,8 @@ class ItemOutController extends Controller
             ->whereBetween('created_at', [$periodStart, $periodEnd])
             ->orderByDesc('date')
             ->orderByDesc('id')
-            ->get();
+            ->paginate(5)
+            ->withQueryString();
 
         $years = range((int) now()->year, (int) now()->year - 5);
 

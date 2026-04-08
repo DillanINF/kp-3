@@ -114,6 +114,7 @@
                 <table class="w-full text-left text-sm">
                     <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-600">
                         <tr>
+                            <th class="px-4 py-3 text-center w-12">No</th>
                             <th class="px-4 py-3">Tgl. Invoice</th>
                             <th class="px-4 py-3">Tgl. Kirim</th>
                             <th class="px-4 py-3">No Invoice</th>
@@ -123,7 +124,6 @@
                             <th class="px-4 py-3">No PO</th>
                             <th class="px-4 py-3">Total PO</th>
                             <th class="px-4 py-3">Qty</th>
-                            <th class="px-4 py-3">Status</th>
                             @if($isAdmin)
                                 <th class="px-4 py-3 text-center">Aksi</th>
                             @endif
@@ -140,6 +140,7 @@
                                     && $pendingCount <= 0;
                             @endphp
                             <tr class="transition-colors hover:bg-indigo-50 {{ $isAdmin && ($invoice->status ?? '') === 'draft' ? 'cursor-pointer' : '' }}" data-po-editable="{{ $isAdmin && ($invoice->status ?? '') === 'draft' ? '1' : '0' }}" data-input-po-href="{{ route('invoices.input_po_by_no', ['invoiceNo' => $invoice->invoice_no]) }}" data-invoice-no-str="{{ $invoice->invoice_no }}" data-invoice-id="{{ $invoice->id }}" data-invoice-no="{{ (int) preg_replace('/\D+/', '', (string) $invoice->invoice_no) }}">
+                                <td class="px-4 py-3 text-center text-slate-500">{{ $loop->iteration + (($invoices->currentPage() - 1) * $invoices->perPage()) }}</td>
                                 <td class="px-4 py-3 text-slate-700">{{ optional($invoice->date)->format('d/m/Y') }}</td>
                                 <td class="px-4 py-3 text-slate-700">
                                     @if($invoice->delivery_date)
@@ -167,69 +168,75 @@
                                 <td class="px-4 py-3 text-slate-500">{{ $invoice->po_no ?? '-' }}</td>
                                 <td class="px-4 py-3 text-slate-500">{{ $invoice->grand_total > 0 ? 'Rp ' . number_format($invoice->grand_total, 0, ',', '.') : '-' }}</td>
                                 <td class="px-4 py-3 text-slate-500">{{ $invoice->qty_total > 0 ? $invoice->qty_total : '-' }}</td>
-                                <td class="px-4 py-3">
-                                    @php
-                                        $status = $invoice->approval?->status ?? 'pending';
-                                        $canDelete = ($status === 'pending');
-                                    @endphp
-                                    @if($status === 'accept')
-                                        <span class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
-                                            ACCEPTED
-                                        </span>
-                                    @else
-                                        <span class="inline-flex items-center rounded-full bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20">
-                                            PENDING
-                                        </span>
-                                    @endif
-                                </td>
                                 @if($isAdmin)
                                     <td class="px-4 py-3 text-center">
-                                        <div class="inline-flex items-center justify-center gap-2">
-                                            <button type="button"
-                                                data-open-modal="modal-preview-pdf"
-                                                data-pdf-url="{{ route('invoices.pdf', $invoice) }}?preview=1"
-                                                class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                                                title="Preview PDF">
-                                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4">
-                                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                                    <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                                </svg>
-                                            </button>
+                                        <button type="button" 
+                                            data-dropdown-trigger
+                                            data-invoice-id="{{ $invoice->id }}"
+                                            data-pdf-url="{{ route('invoices.pdf', $invoice) }}?preview=1"
+                                            data-download-url="{{ route('invoices.pdf', $invoice) }}"
+                                            data-delete-url="{{ route('invoices.destroy', $invoice) }}"
+                                            class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+                                            aria-label="Aksi">
+                                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5">
+                                                <path d="M12 13C12.5523 13 13 12.5523 13 12C13 11.4477 12.5523 11 12 11C11.4477 11 11 11.4477 11 12C11 12.5523 11.4477 13 12 13Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                <path d="M12 6C12.5523 6 13 5.55228 13 5C13 4.44772 12.5523 4 12 4C11.4477 4 11 4.44772 11 5C11 5.55228 11.4477 6 12 6Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                <path d="M12 20C12.5523 20 13 19.5523 13 19C13 18.4477 12.5523 18 12 18C11.4477 18 11 18.4477 11 19C11 19.5523 11.4477 20 12 20Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            </svg>
+                                        </button>
 
-                                            <a href="{{ route('invoices.pdf', $invoice) }}" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100" aria-label="PDF" title="Download PDF">
-                                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4">
-                                                    <path d="M7 3H14L18 7V21H7V3Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                                                    <path d="M14 3V7H18" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                                                    <path d="M9 12H15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                                                    <path d="M9 16H13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                                                </svg>
-                                            </a>
-
-                                            <form action="{{ route('invoices.destroy', $invoice) }}" method="POST" onsubmit="return {{ $canDelete ? "confirm('Hapus invoice ini?')" : 'false' }}" class="inline-flex">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" data-action="delete-invoice" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border {{ $canDelete ? 'border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100' : 'border-slate-200 bg-slate-50 text-slate-400 cursor-not-allowed' }}" aria-label="Hapus" {{ $canDelete ? '' : 'disabled' }} title="{{ $canDelete ? 'Hapus' : 'Invoice sudah di-Accept, tidak bisa dihapus' }}">
-                                                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4">
-                                                        <path d="M3 6H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                                                        <path d="M8 6V4H16V6" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                                                        <path d="M19 6L18 20H6L5 6" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                                                        <path d="M10 11V17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                                                        <path d="M14 11V17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                        <!-- Dropdown Menu Portal (fixed positioning) -->
+                                        <div id="dropdown-menu-invoice-{{ $invoice->id }}" data-dropdown-menu class="hidden fixed z-[9999] w-48 rounded-xl bg-white shadow-2xl ring-1 ring-slate-200 focus:outline-none">
+                                            <div class="py-1" role="menu" aria-orientation="vertical">
+                                                <button type="button" 
+                                                    data-open-modal="modal-preview-pdf"
+                                                    data-pdf-url="{{ route('invoices.pdf', $invoice) }}?preview=1"
+                                                    class="flex w-full items-center px-4 py-2 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 text-left" role="menuitem">
+                                                    <svg class="mr-3 h-4 w-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                                     </svg>
+                                                    Preview PDF
                                                 </button>
-                                            </form>
+                                                
+                                                <a href="{{ route('invoices.pdf', $invoice) }}" 
+                                                    class="flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-50" role="menuitem">
+                                                    <svg class="mr-3 h-4 w-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                                    </svg>
+                                                    Download PDF
+                                                </a>
+                                                
+                                                <form action="{{ route('invoices.destroy', $invoice) }}" method="POST" class="block w-full" onsubmit="return confirm('Hapus invoice ini? (Data stok dan laporan akan disesuaikan)')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="flex w-full items-center px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 text-left" role="menuitem">
+                                                        <svg class="mr-3 h-4 w-4 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                        </svg>
+                                                        Hapus
+                                                    </button>
+                                                </form>
+                                            </div>
                                         </div>
                                     </td>
                                 @endif
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="{{ $isAdmin ? 7 : 6 }}" class="px-4 py-6 text-center text-sm text-slate-500">Belum ada data invoice.</td>
+                                <td colspan="{{ $isAdmin ? 11 : 10 }}" class="px-4 py-6 text-center text-sm text-slate-500">Belum ada data invoice.</td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
+
+            <!-- Pagination -->
+            @if($invoices->hasPages())
+                <div class="border-t border-slate-200 px-4 py-3">
+                    {{ $invoices->links() }}
+                </div>
+            @endif
         </div>
     </div>
 
@@ -262,21 +269,79 @@
                 }
             });
 
+            // Dropdown toggle handler with fixed positioning
+            function positionDropdownMenu(trigger, menu) {
+                const rect = trigger.getBoundingClientRect();
+                const menuHeight = menu.offsetHeight || 150;
+                const menuWidth = menu.offsetWidth || 192;
+                
+                let top = rect.bottom + window.scrollY + 4;
+                let left = rect.right + window.scrollX - menuWidth;
+                
+                const viewportHeight = window.innerHeight;
+                if (top + menuHeight > viewportHeight + window.scrollY) {
+                    top = rect.top + window.scrollY - menuHeight - 4;
+                }
+                
+                menu.style.top = `${top}px`;
+                menu.style.left = `${left}px`;
+            }
+
             document.addEventListener('click', function (e) {
+                // Handle dropdown toggle
+                const trigger = e.target.closest('[data-dropdown-trigger]');
+                if (trigger) {
+                    const invoiceId = trigger.getAttribute('data-invoice-id');
+                    const menu = document.getElementById(`dropdown-menu-invoice-${invoiceId}`);
+                    if (menu) {
+                        document.querySelectorAll('[data-dropdown-menu]').forEach(m => {
+                            if (m !== menu) m.classList.add('hidden');
+                        });
+                        
+                        if (menu.classList.contains('hidden')) {
+                            positionDropdownMenu(trigger, menu);
+                            menu.classList.remove('hidden');
+                        } else {
+                            menu.classList.add('hidden');
+                        }
+                    }
+                    return;
+                }
+
+                // Close dropdown when clicking outside
+                const clickedMenu = e.target.closest('[data-dropdown-menu]');
+                if (!clickedMenu && !e.target.closest('[data-dropdown-trigger]')) {
+                    document.querySelectorAll('[data-dropdown-menu]').forEach(m => m.classList.add('hidden'));
+                }
+
+                // Handle preview modal
                 const previewBtn = e.target.closest('[data-open-modal="modal-preview-pdf"]');
                 if (previewBtn) {
+                    // Close dropdown first
+                    document.querySelectorAll('[data-dropdown-menu]').forEach(m => m.classList.add('hidden'));
+                    
                     const pdfUrl = previewBtn.getAttribute('data-pdf-url');
                     const iframe = document.getElementById('pdf-preview-frame');
+                    const modalPreview = document.getElementById('modal-preview-pdf');
                     if (iframe && pdfUrl) {
                         iframe.src = pdfUrl;
+                    }
+                    if (modalPreview) {
+                        modalPreview.classList.remove('hidden');
+                        modalPreview.classList.add('flex');
                     }
                 }
 
                 const closePreviewBtn = e.target.closest('[data-close-modal="modal-preview-pdf"]');
                 if (closePreviewBtn) {
                     const iframe = document.getElementById('pdf-preview-frame');
+                    const modalPreview = document.getElementById('modal-preview-pdf');
                     if (iframe) {
                         iframe.src = '';
+                    }
+                    if (modalPreview) {
+                        modalPreview.classList.add('hidden');
+                        modalPreview.classList.remove('flex');
                     }
                 }
             });

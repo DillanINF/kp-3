@@ -48,7 +48,15 @@ class SupplierRequestController extends Controller
             $requestsQuery->where('supplier_id', $selectedSupplierId);
         }
 
-        $requests = $requestsQuery->get();
+        $requests = $requestsQuery->paginate(5)->withQueryString();
+
+        $autoFill = null;
+        if ($request->has('add_item_id') && $request->has('add_qty')) {
+            $autoFill = [
+                'item_id' => (int) $request->query('add_item_id'),
+                'qty' => (int) $request->query('add_qty'),
+            ];
+        }
 
         $requests->each(function ($req) {
             $req->items_json = json_encode(
@@ -77,6 +85,7 @@ class SupplierRequestController extends Controller
             'supplierProducts' => $supplierProducts,
             'requests' => $requests,
             'selectedSupplierId' => $selectedSupplierId,
+            'autoFill' => $autoFill,
         ]);
     }
 
@@ -147,6 +156,10 @@ class SupplierRequestController extends Controller
 
     public function update(Request $request, SupplierRequest $supplierRequest)
     {
+        if ($supplierRequest->status === 'accepted') {
+            return back()->with('error', 'Permintaan yang sudah diterima tidak dapat diubah.');
+        }
+
         $validated = $request->validate([
             'supplier_id' => ['required', 'integer', 'exists:suppliers,id'],
             'notes' => ['nullable', 'string'],

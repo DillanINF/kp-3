@@ -17,6 +17,7 @@
             <table class="w-full text-left text-sm">
                 <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-600">
                     <tr>
+                        <th class="px-4 py-3 text-center w-12">No</th>
                         <th class="px-4 py-3">Nama</th>
                         <th class="px-4 py-3">Email</th>
                         <th class="px-4 py-3">Telepon</th>
@@ -29,6 +30,7 @@
                 <tbody class="divide-y divide-slate-200">
                     @forelse($customers as $customer)
                         <tr>
+                            <td class="px-4 py-3 text-center text-slate-500">{{ $loop->iteration + (($customers->currentPage() - 1) * $customers->perPage()) }}</td>
                             <td class="px-4 py-3 font-medium text-slate-900">{{ $customer->name }}</td>
                             <td class="px-4 py-3 text-slate-700">{{ $customer->email ?? '-' }}</td>
                             <td class="px-4 py-3 text-slate-700">{{ $customer->phone ?? '-' }}</td>
@@ -72,12 +74,19 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="{{ auth()->user()?->role === 'admin' ? 5 : 4 }}" class="px-4 py-6 text-center text-sm text-slate-500">Belum ada data customer.</td>
+                            <td colspan="{{ auth()->user()?->role === 'admin' ? 6 : 5 }}" class="px-4 py-6 text-center text-sm text-slate-500">Belum ada data customer.</td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
+
+        <!-- Pagination -->
+        @if($customers->hasPages())
+            <div class="border-t border-slate-200 px-4 py-3">
+                {{ $customers->links() }}
+            </div>
+        @endif
     </div>
 
     @if(auth()->user()?->role === 'admin')

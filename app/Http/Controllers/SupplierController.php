@@ -10,12 +10,13 @@ use Illuminate\Support\Facades\DB;
 
 class SupplierController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $suppliers = Supplier::query()
             ->with(['supplierItems' => fn ($q) => $q->with('item')->orderBy('id')])
             ->orderBy('name')
-            ->get();
+            ->paginate(5)
+            ->withQueryString();
 
         $items = Item::query()->orderBy('name')->get();
 
@@ -67,7 +68,7 @@ class SupplierController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'unit' => ['required', 'string', 'in:qty'],
+            'unit' => ['required', 'string', 'in:qty,set,gram,kg,pcs,box,roll,meter'],
             'buy_price' => ['nullable', 'integer', 'min:0'],
             'sell_price' => ['nullable', 'integer', 'min:0'],
         ]);
@@ -157,10 +158,10 @@ class SupplierController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255', 'unique:suppliers,name'],
             'contact_name' => ['nullable', 'string', 'max:255'],
             'phone' => ['nullable', 'string', 'max:50'],
-            'email' => ['nullable', 'email', 'max:255'],
+            'email' => ['nullable', 'email', 'max:255', 'unique:suppliers,email'],
             'address' => ['nullable', 'string', 'max:255'],
         ]);
 
@@ -179,10 +180,10 @@ class SupplierController extends Controller
     public function update(Request $request, Supplier $supplier)
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255', 'unique:suppliers,name,' . $supplier->id],
             'contact_name' => ['nullable', 'string', 'max:255'],
             'phone' => ['nullable', 'string', 'max:50'],
-            'email' => ['nullable', 'email', 'max:255'],
+            'email' => ['nullable', 'email', 'max:255', 'unique:suppliers,email,' . $supplier->id],
             'address' => ['nullable', 'string', 'max:255'],
         ]);
 

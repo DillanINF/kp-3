@@ -45,7 +45,7 @@
                 <tbody class="divide-y divide-slate-200">
                     @forelse($requests as $req)
                         <tr>
-                            <td class="px-4 py-3 font-medium text-slate-900">{{ $loop->iteration }}</td>
+                            <td class="px-4 py-3 text-center text-slate-500">{{ $loop->iteration + (($requests->currentPage() - 1) * $requests->perPage()) }}</td>
                             <td class="px-4 py-3 text-slate-700">{{ $req->created_at?->format('d/m/Y H:i:s') }}</td>
                             <td class="px-4 py-3 text-slate-700">{{ $req->supplier?->name ?? '-' }}</td>
                             <td class="px-4 py-3 text-slate-700">{{ $req->total_qty }}</td>
@@ -84,21 +84,23 @@
                             @if(auth()->user()?->role === 'admin')
                                 <td class="px-4 py-3">
                                     <div class="flex items-center justify-center gap-2">
-                                        <button
-                                            type="button"
-                                            data-action="edit-request"
-                                            data-request-id="{{ $req->id }}"
-                                            data-request-supplier-id="{{ $req->supplier_id }}"
-                                            data-request-notes="{{ $req->notes }}"
-                                            data-request-items='{{ $req->items_json }}'
-                                            class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                                            aria-label="Edit"
-                                        >
-                                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4">
-                                                <path d="M12 20H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                                                <path d="M16.5 3.5C17.3284 2.67157 18.6716 2.67157 19.5 3.5C20.3284 4.32843 20.3284 5.67157 19.5 6.5L8 18L3 19L4 14L16.5 3.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                                            </svg>
-                                        </button>
+                                        @if($req->status !== 'accepted')
+                                            <button
+                                                type="button"
+                                                data-action="edit-request"
+                                                data-request-id="{{ $req->id }}"
+                                                data-request-supplier-id="{{ $req->supplier_id }}"
+                                                data-request-notes="{{ $req->notes }}"
+                                                data-request-items='{{ $req->items_json }}'
+                                                class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                                                aria-label="Edit"
+                                            >
+                                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4">
+                                                    <path d="M12 20H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                                    <path d="M16.5 3.5C17.3284 2.67157 18.6716 2.67157 19.5 3.5C20.3284 4.32843 20.3284 5.67157 19.5 6.5L8 18L3 19L4 14L16.5 3.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                                                </svg>
+                                            </button>
+                                        @endif
                                         <form action="{{ route('masters.items_supplier.destroy', ['supplierRequest' => $req->id]) }}" method="POST" onsubmit="return confirm('Hapus permintaan ini?')">
                                             @csrf
                                             @method('DELETE')
@@ -116,6 +118,13 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- Pagination -->
+        @if($requests->hasPages())
+            <div class="border-t border-slate-200 px-4 py-3">
+                {{ $requests->links() }}
+            </div>
+        @endif
     </div>
 
     @if(auth()->user()?->role === 'admin')
@@ -387,6 +396,31 @@
                 if (unitEl) unitEl.value = unit;
                 if (priceEl) priceEl.value = price;
             };
+
+            document.addEventListener('DOMContentLoaded', () => {
+                const autoFill = @json($autoFill ?? null);
+                if (autoFill) {
+                    openInlineModal('modal-tambah-permintaan');
+                    resetRequestForm();
+                    
+                    const form = document.getElementById('request-form');
+                    const itemsEl = form?.querySelector('[data-request-items]');
+                    if (itemsEl) {
+                        const row = itemsEl.querySelector('[data-request-item-row]');
+                        if (row) {
+                            const productSel = row.querySelector('[data-request-product]');
+                            const qtyInput = row.querySelector('input[name="items[0][qty]"]');
+                            if (productSel) {
+                                productSel.value = String(autoFill.item_id);
+                                applySelectedProductToRow(row);
+                            }
+                            if (qtyInput) {
+                                qtyInput.value = String(autoFill.qty);
+                            }
+                        }
+                    }
+                }
+            });
 
             document.addEventListener('click', (e) => {
                 const openNew = e.target.closest('[data-open-modal="modal-tambah-permintaan"]');

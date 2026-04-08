@@ -39,7 +39,7 @@ class ItemInController extends Controller
             ->all();
 
         $items = Item::query()->orderBy('name')->get();
-        $history = ItemIn::query()->with(['supplier', 'item'])->orderByDesc('date')->orderByDesc('id')->get();
+        $history = ItemIn::query()->with(['supplier', 'item'])->orderByDesc('date')->orderByDesc('id')->paginate(5)->withQueryString();
 
         $historyGrandTotal = 0;
         foreach ($history as $row) {

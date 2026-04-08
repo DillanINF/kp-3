@@ -29,14 +29,20 @@
                     <tr>
                         <th class="px-4 py-3 text-center w-16">No</th>
                         <th class="px-4 py-3">Nama Pengirim</th>
+                        <th class="px-4 py-3">No. Telp</th>
+                        <th class="px-4 py-3">Kendaraan</th>
+                        <th class="px-4 py-3">No. Polisi</th>
                         <th class="px-4 py-3 text-right">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200">
                     @forelse($pengirims as $p)
                         <tr class="hover:bg-slate-50 transition-colors">
-                            <td class="px-4 py-3 text-center text-slate-500">{{ $loop->iteration }}</td>
+                            <td class="px-4 py-3 text-center text-slate-500">{{ $loop->iteration + (($pengirims->currentPage() - 1) * $pengirims->perPage()) }}</td>
                             <td class="px-4 py-3 font-medium text-slate-900">{{ $p->name }}</td>
+                            <td class="px-4 py-3 text-slate-700">{{ $p->phone ?? '-' }}</td>
+                            <td class="px-4 py-3 text-slate-700">{{ $p->vehicle_type ?? '-' }}</td>
+                            <td class="px-4 py-3 text-slate-700">{{ $p->license_plate ?? '-' }}</td>
                             <td class="px-4 py-3 text-right">
                                 <div class="inline-flex items-center gap-2">
                                     @if(auth()->user()?->role === 'admin')
@@ -68,12 +74,24 @@
                                                 <div class="bg-slate-900 px-6 py-5">
                                                     <div class="text-lg font-semibold text-white">Edit Pengirim</div>
                                                 </div>
-                                                <form action="{{ route('masters.pengirim.update', $p) }}" method="POST" class="space-y-4 px-6 py-6">
+                                                <form action="{{ route('masters.pengirim.update', $p) }}" method="POST" class="space-y-4 px-6 py-6 overflow-y-auto max-h-[70vh]">
                                                     @csrf
                                                     @method('PUT')
                                                     <div class="space-y-2 text-left">
                                                         <label class="text-sm font-semibold text-slate-700">Nama Pengirim</label>
                                                         <input name="name" value="{{ $p->name }}" type="text" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100" required />
+                                                    </div>
+                                                    <div class="space-y-2 text-left">
+                                                        <label class="text-sm font-semibold text-slate-700">No. Telpon</label>
+                                                        <input name="phone" value="{{ $p->phone }}" type="text" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100" placeholder="08xxxx" />
+                                                    </div>
+                                                    <div class="space-y-2 text-left">
+                                                        <label class="text-sm font-semibold text-slate-700">Kendaraan</label>
+                                                        <input name="vehicle_type" value="{{ $p->vehicle_type }}" type="text" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100" placeholder="Contoh: Truck Engkel" />
+                                                    </div>
+                                                    <div class="space-y-2 text-left">
+                                                        <label class="text-sm font-semibold text-slate-700">No. Polisi</label>
+                                                        <input name="license_plate" value="{{ $p->license_plate }}" type="text" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100" placeholder="Contoh: B 1234 ABC" />
                                                     </div>
                                                     <div class="flex items-center justify-end gap-2 pt-2">
                                                         <button type="button" data-close-modal="modal-edit-pengirim-{{ $p->id }}" class="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">Batal</button>
@@ -88,12 +106,19 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="3" class="px-4 py-8 text-center text-slate-500 italic">Belum ada data pengirim.</td>
+                            <td colspan="6" class="px-4 py-8 text-center text-slate-500 italic">Belum ada data pengirim.</td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
+
+        <!-- Pagination -->
+        @if($pengirims->hasPages())
+            <div class="border-t border-slate-200 px-4 py-3">
+                {{ $pengirims->links() }}
+            </div>
+        @endif
     </div>
 
     {{-- ================= MODAL TAMBAH ================= --}}
@@ -124,6 +149,33 @@
                             placeholder="Contoh: Mursidi"
                             class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
                             required />
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-sm font-semibold text-slate-700">No. Telpon</label>
+                        <input name="phone"
+                            value="{{ old('phone') }}"
+                            type="text"
+                            placeholder="08xxxx"
+                            class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100" />
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-sm font-semibold text-slate-700">Kendaraan</label>
+                        <input name="vehicle_type"
+                            value="{{ old('vehicle_type') }}"
+                            type="text"
+                            placeholder="Contoh: Truck Engkel"
+                            class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100" />
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-sm font-semibold text-slate-700">No. Polisi</label>
+                        <input name="license_plate"
+                            value="{{ old('license_plate') }}"
+                            type="text"
+                            placeholder="Contoh: B 1234 ABC"
+                            class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100" />
                     </div>
 
                     {{-- BUTTON --}}

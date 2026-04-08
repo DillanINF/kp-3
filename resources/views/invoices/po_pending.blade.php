@@ -35,6 +35,7 @@
             <table class="w-full text-left text-sm">
                 <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-600">
                         <tr>
+                            <th class="px-4 py-3 text-center w-12">No</th>
                             <th class="px-4 py-3">Tanggal</th>
                             <th class="px-4 py-3">No Invoice</th>
                             <th class="px-4 py-3">No PO</th>
@@ -44,14 +45,15 @@
                             <th class="px-4 py-3">Harga</th>
                             <th class="px-4 py-3">Status</th>
                             @if($isAdmin)
-                                <th class="px-4 py-3 text-center">Aksi</th>
                                 <th class="px-4 py-3 text-center">Kirim</th>
+                                <th class="px-4 py-3 text-center">Aksi</th>
                             @endif
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-200">
                         @forelse(($rows ?? []) as $row)
                             <tr class="group hover:bg-slate-50 transition-colors">
+                                <td class="px-4 py-3 text-center text-slate-500">{{ $loop->iteration + (($rows->currentPage() - 1) * $rows->perPage()) }}</td>
                                 <td class="px-4 py-3 text-slate-600">{{ optional($row->created_at)->timezone(config('app.timezone'))->format('Y-m-d H:i:s') }}</td>
                                 <td class="px-4 py-3 font-medium text-slate-900">
                                     <div class="flex flex-col">
@@ -71,46 +73,9 @@
                                 </td>
                                 @if($isAdmin)
                                     <td class="px-4 py-3 text-center">
-                                        <div class="inline-flex items-center justify-center gap-2">
-                                            @if($row->invoice)
-                                                <button type="button"
-                                                    data-open-modal="modal-preview-pdf"
-                                                    data-pdf-url="{{ route('invoices.pdf', $row->invoice) }}?preview=1"
-                                                    class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                                                    title="Preview PDF Invoice">
-                                                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4">
-                                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                                        <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                                    </svg>
-                                                </button>
-                                            @endif
-
-                                            <button type="button" data-pending-edit data-id="{{ $row->id }}" data-qty="{{ $row->qty }}" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50" aria-label="Edit Qty">
-                                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4">
-                                                    <path d="M12 20H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                                                    <path d="M16.5 3.5C17.3284 2.67157 18.6716 2.67157 19.5 3.5C20.3284 4.32843 20.3284 5.67157 19.5 6.5L8 18L3 19L4 14L16.5 3.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
-                                                </svg>
-                                            </button>
-
-                                            <form action="{{ route('invoices.po_pending.destroy', ['pending' => $row->id]) }}" method="POST" class="inline-flex" onsubmit="return confirm('Hapus data pending ini?')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100" aria-label="Hapus">
-                                                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4">
-                                                        <path d="M3 6H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                                                        <path d="M8 6V4H16V6" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
-                                                        <path d="M19 6L18 20H6L5 6" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
-                                                        <path d="M10 11V17" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                                                        <path d="M14 11V17" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                                                    </svg>
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                    <td class="px-4 py-3 text-center">
                                         <form action="{{ route('invoices.po_pending.fulfill', ['pending' => $row->id]) }}" method="POST" class="inline-flex">
                                             @csrf
-                                            <button type="submit" class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 text-white hover:bg-indigo-700" aria-label="Kirim Otomatis" onclick="return confirm('Kirim otomatis sisa PO ini?')">
+                                            <button type="submit" class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-sm hover:bg-indigo-700 hover:scale-105 transition-all" title="Kirim Otomatis" onclick="return confirm('Kirim otomatis sisa PO ini?')">
                                                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4">
                                                     <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                                     <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
@@ -118,16 +83,77 @@
                                             </button>
                                         </form>
                                     </td>
+                                    <td class="px-4 py-3 text-center">
+                                        <button type="button" 
+                                            data-dropdown-trigger
+                                            data-row-id="{{ $row->id }}"
+                                            data-item-id="{{ $row->item_id }}"
+                                            data-qty="{{ $row->qty }}"
+                                            class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+                                            aria-label="Aksi">
+                                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5">
+                                                <path d="M12 13C12.5523 13 13 12.5523 13 12C13 11.4477 12.5523 11 12 11C11.4477 11 11 11.4477 11 12C11 12.5523 11.4477 13 12 13Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                <path d="M12 6C12.5523 6 13 5.55228 13 5C13 4.44772 12.5523 4 12 4C11.4477 4 11 4.44772 11 5C11 5.55228 11.4477 6 12 6Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                <path d="M12 20C12.5523 20 13 19.5523 13 19C13 18.4477 12.5523 18 12 18C11.4477 18 11 18.4477 11 19C11 19.5523 11.4477 20 12 20Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            </svg>
+                                        </button>
+
+                                        <!-- Dropdown Menu Portal (fixed positioning) -->
+                                        <div id="dropdown-menu-{{ $row->id }}" data-dropdown-menu class="hidden fixed z-[9999] w-48 rounded-xl bg-white shadow-2xl ring-1 ring-slate-200 focus:outline-none">
+                                            <div class="py-1" role="menu" aria-orientation="vertical">
+                                                @php
+                                                    $supplierItem = \App\Models\SupplierItem::where('item_id', $row->item_id)->first();
+                                                    $supplierId = $supplierItem ? $supplierItem->supplier_id : '';
+                                                @endphp
+                                                <a href="{{ route('masters.items_supplier') }}?supplier_id={{ $supplierId }}&add_item_id={{ $row->item_id }}&add_qty={{ $row->qty }}" 
+                                                    class="flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-700" role="menuitem">
+                                                    <svg class="mr-3 h-4 w-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                                    </svg>
+                                                    Tambah Stok
+                                                </a>
+                                                
+                                                <button type="button" 
+                                                    data-pending-edit 
+                                                    data-id="{{ $row->id }}" 
+                                                    data-qty="{{ $row->qty }}"
+                                                    class="flex w-full items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 text-left" role="menuitem">
+                                                    <svg class="mr-3 h-4 w-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                                                    </svg>
+                                                    Edit Qty
+                                                </button>
+                                                
+                                                <form action="{{ route('invoices.po_pending.destroy', ['pending' => $row->id]) }}" method="POST" class="block w-full" onsubmit="return confirm('Hapus data pending ini?')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="flex w-full items-center px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 text-left" role="menuitem">
+                                                        <svg class="mr-3 h-4 w-4 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                        </svg>
+                                                        Hapus
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </td>
                                 @endif
                             </tr>
                     @empty
                         <tr>
-                            <td colspan="{{ $isAdmin ? 10 : 8 }}" class="px-4 py-6 text-center text-sm text-slate-500">Belum ada PO yang belum terkirim.</td>
+                            <td colspan="{{ $isAdmin ? 11 : 9 }}" class="px-4 py-6 text-center text-sm text-slate-500">Belum ada PO yang belum terkirim.</td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
+
+        <!-- Pagination -->
+        @if($rows->hasPages())
+            <div class="border-t border-slate-200 px-4 py-3">
+                {{ $rows->links() }}
+            </div>
+        @endif
     </div>
 
     @if($isAdmin)
@@ -194,6 +220,73 @@
                     modal.classList.remove('flex');
                 };
 
+                // Dropdown toggle handler with fixed positioning
+                function positionDropdownMenu(trigger, menu) {
+                    const rect = trigger.getBoundingClientRect();
+                    const menuHeight = menu.offsetHeight || 150;
+                    const menuWidth = menu.offsetWidth || 192;
+                    
+                    // Calculate position (below the button, aligned to right)
+                    let top = rect.bottom + window.scrollY + 4;
+                    let left = rect.right + window.scrollX - menuWidth;
+                    
+                    // Check if menu goes below viewport
+                    const viewportHeight = window.innerHeight;
+                    if (top + menuHeight > viewportHeight + window.scrollY) {
+                        // Show above the button instead
+                        top = rect.top + window.scrollY - menuHeight - 4;
+                    }
+                    
+                    menu.style.top = `${top}px`;
+                    menu.style.left = `${left}px`;
+                }
+
+                document.addEventListener('click', (e) => {
+                    const trigger = e.target.closest('[data-dropdown-trigger]');
+                    if (trigger) {
+                        const rowId = trigger.getAttribute('data-row-id');
+                        const menu = document.getElementById(`dropdown-menu-${rowId}`);
+                        if (menu) {
+                            // Close all other dropdowns first
+                            document.querySelectorAll('[data-dropdown-menu]').forEach(m => {
+                                if (m !== menu) m.classList.add('hidden');
+                            });
+                            
+                            if (menu.classList.contains('hidden')) {
+                                positionDropdownMenu(trigger, menu);
+                                menu.classList.remove('hidden');
+                            } else {
+                                menu.classList.add('hidden');
+                            }
+                        }
+                        return;
+                    }
+
+                    // Close dropdown when clicking outside
+                    const clickedMenu = e.target.closest('[data-dropdown-menu]');
+                    if (!clickedMenu && !e.target.closest('[data-dropdown-trigger]')) {
+                        document.querySelectorAll('[data-dropdown-menu]').forEach(m => m.classList.add('hidden'));
+                    }
+                });
+
+                // Auto-preview PDF after successful fulfill
+                @if(session('show_pdf_preview'))
+                (function() {
+                    const previewUrl = @json(session('show_pdf_preview'));
+                    if (previewUrl) {
+                        setTimeout(() => {
+                            const iframe = document.getElementById('pdf-preview-frame');
+                            const modalPreview = document.getElementById('modal-preview-pdf');
+                            if (iframe && modalPreview) {
+                                iframe.src = previewUrl;
+                                modalPreview.classList.remove('hidden');
+                                modalPreview.classList.add('flex');
+                            }
+                        }, 300);
+                    }
+                })();
+                @endif
+
                 document.addEventListener('click', (e) => {
                     const previewBtn = e.target.closest('[data-open-modal="modal-preview-pdf"]');
                     if (previewBtn) {
@@ -226,6 +319,8 @@
 
                     const editBtn = e.target.closest('[data-pending-edit]');
                     if (editBtn) {
+                        // Close dropdown first
+                        document.querySelectorAll('[data-dropdown-menu]').forEach(m => m.classList.add('hidden'));
                         const id = editBtn.getAttribute('data-id');
                         const qty = editBtn.getAttribute('data-qty');
                         if (form && id) {

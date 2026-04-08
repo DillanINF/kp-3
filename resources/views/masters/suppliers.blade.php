@@ -17,6 +17,7 @@
             <table class="w-full text-left text-sm">
                 <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-600">
                     <tr>
+                        <th class="px-4 py-3 text-center w-12">No</th>
                         <th class="w-10 px-4 py-3"></th>
                         <th class="px-4 py-3">Nama</th>
                         <th class="px-4 py-3">Telepon</th>
@@ -30,6 +31,7 @@
                 <tbody class="divide-y divide-slate-200">
                     @forelse($suppliers as $supplier)
                         <tr>
+                            <td class="px-4 py-3 text-center text-slate-500">{{ $loop->iteration + (($suppliers->currentPage() - 1) * $suppliers->perPage()) }}</td>
                             <td class="px-4 py-3">
                                 <button type="button" data-toggle-supplier-items="{{ $supplier->id }}" class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600 hover:bg-slate-50" aria-label="Toggle">
                                     <span data-supplier-chevron="{{ $supplier->id }}">&gt;</span>
@@ -81,7 +83,7 @@
 
                         <tr data-supplier-items-row="{{ $supplier->id }}" class="hidden bg-slate-50">
                             <td></td>
-                            <td colspan="{{ auth()->user()?->role === 'admin' ? 5 : 4 }}" class="px-4 py-4">
+                            <td colspan="{{ auth()->user()?->role === 'admin' ? 6 : 5 }}" class="px-4 py-4">
                                 <div class="rounded-lg border border-slate-200 bg-white p-4">
                                     <div class="mb-2 flex items-center justify-between gap-3">
                                         <div class="text-sm font-semibold text-slate-900">Barang Supplier</div>
@@ -150,12 +152,19 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="{{ auth()->user()?->role === 'admin' ? 6 : 5 }}" class="px-4 py-6 text-center text-sm text-slate-500">Belum ada data supplier.</td>
+                            <td colspan="{{ auth()->user()?->role === 'admin' ? 7 : 6 }}" class="px-4 py-6 text-center text-sm text-slate-500">Belum ada data supplier.</td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
+
+        <!-- Pagination -->
+        @if($suppliers->hasPages())
+            <div class="border-t border-slate-200 px-4 py-3">
+                {{ $suppliers->links() }}
+            </div>
+        @endif
     </div>
 
     @if(auth()->user()?->role === 'admin')
@@ -177,7 +186,16 @@
 
                     <div class="space-y-2">
                         <label class="text-sm font-semibold text-slate-700">Satuan</label>
-                        <input data-add-supplier-item-unit name="unit" type="text" value="qty" class="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700 outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100" required readonly />
+                        <select data-add-supplier-item-unit name="unit" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100" required>
+                            <option value="qty">qty</option>
+                            <option value="set">set</option>
+                            <option value="gram">gram</option>
+                            <option value="kg">kg</option>
+                            <option value="pcs">pcs</option>
+                            <option value="box">box</option>
+                            <option value="roll">roll</option>
+                            <option value="meter">meter</option>
+                        </select>
                     </div>
 
                     <div class="space-y-2">
@@ -216,7 +234,16 @@
 
                     <div class="space-y-2">
                         <label class="text-sm font-semibold text-slate-700">Satuan</label>
-                        <input data-edit-supplier-item-unit name="unit" type="text" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100" required />
+                        <select data-edit-supplier-item-unit name="unit" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100" required>
+                            <option value="qty">qty</option>
+                            <option value="set">set</option>
+                            <option value="gram">gram</option>
+                            <option value="kg">kg</option>
+                            <option value="pcs">pcs</option>
+                            <option value="box">box</option>
+                            <option value="roll">roll</option>
+                            <option value="meter">meter</option>
+                        </select>
                     </div>
 
                     <div class="space-y-2">

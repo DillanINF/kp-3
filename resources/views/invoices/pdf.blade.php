@@ -227,10 +227,18 @@
                 </tr>
                 <tr>
                     <td class="meta-label">Pengirim</td>
-                    <td class="meta-value">: {{ $pengirim_name ?? '-' }}</td>
+                    <td class="meta-value">: {{ $invoice->pengirim?->name ?? '-' }}</td>
+                    <td class="meta-label" style="padding-left: 30px;">Detail Pengirim</td>
+                    <td class="meta-value">: {{ $invoice->pengirim ? ($invoice->pengirim->vehicle_type . ' (' . $invoice->pengirim->license_plate . ')') : '-' }}</td>
+                </tr>
+                @if($invoice->pengirim && $invoice->pengirim->phone)
+                <tr>
+                    <td class="meta-label">Telp Pengirim</td>
+                    <td class="meta-value">: {{ $invoice->pengirim->phone }}</td>
                     <td></td>
                     <td></td>
                 </tr>
+                @endif
             </table>
         </div>
 

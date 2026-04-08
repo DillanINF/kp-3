@@ -27,7 +27,7 @@
                 <tbody class="divide-y divide-slate-200">
                     @forelse($regularItems as $item)
                         <tr>
-                            <td class="px-4 py-3 text-slate-700">{{ $loop->iteration }}</td>
+                            <td class="px-4 py-3 text-center text-slate-500">{{ $loop->iteration + (($regularItems->currentPage() - 1) * $regularItems->perPage()) }}</td>
                             <td class="px-4 py-3 text-slate-700">{{ $item->name }}</td>
                             <td class="px-4 py-3 text-slate-700">{{ $item->stock }}</td>
                             <td class="px-4 py-3 text-slate-700">Rp {{ number_format($item->supplier_buy_price_per_pcs ?? 0, 0, ',', '.') }}</td>
@@ -52,5 +52,12 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- Pagination -->
+        @if($regularItems->hasPages())
+            <div class="border-t border-slate-200 px-4 py-3">
+                {{ $regularItems->links() }}
+            </div>
+        @endif
     </div>
 @endsection

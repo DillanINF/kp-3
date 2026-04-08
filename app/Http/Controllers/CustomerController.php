@@ -8,9 +8,12 @@ use Illuminate\Support\Facades\Schema;
 
 class CustomerController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $customers = Customer::query()->orderBy('name')->get();
+        $customers = Customer::query()
+            ->orderBy('name')
+            ->paginate(5)
+            ->withQueryString();
 
         return view('masters.customers', [
             'customers' => $customers,
@@ -20,8 +23,8 @@ class CustomerController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['nullable', 'email', 'max:255'],
+            'name' => ['required', 'string', 'max:255', 'unique:customers,name'],
+            'email' => ['nullable', 'email', 'max:255', 'unique:customers,email'],
             'phone' => ['nullable', 'string', 'max:50'],
             'address' => ['nullable', 'string', 'max:255'],
         ]);
@@ -42,8 +45,8 @@ class CustomerController extends Controller
     public function update(Request $request, Customer $customer)
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['nullable', 'email', 'max:255'],
+            'name' => ['required', 'string', 'max:255', 'unique:customers,name,' . $customer->id],
+            'email' => ['nullable', 'email', 'max:255', 'unique:customers,email,' . $customer->id],
             'phone' => ['nullable', 'string', 'max:50'],
             'address' => ['nullable', 'string', 'max:255'],
         ]);

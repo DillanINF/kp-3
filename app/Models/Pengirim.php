@@ -9,5 +9,5 @@ class Pengirim extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'name'];
+    protected $fillable = ['name', 'phone', 'vehicle_type', 'license_plate'];
 }

@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 
 class ItemController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $regularItems = Item::query()
             ->where('item_type', 'regular')
@@ -21,7 +21,8 @@ class ItemController extends Controller
                     ->selectRaw('COALESCE(MAX(supplier_items.buy_price), 0)');
             }, 'supplier_buy_price_per_pcs')
             ->orderBy('name')
-            ->get();
+            ->paginate(5)
+            ->withQueryString();
 
         return view('masters.items', [
             'regularItems' => $regularItems,
@@ -43,7 +44,7 @@ class ItemController extends Controller
             $supplierItemsQuery->where('supplier_id', $selectedSupplierId);
         }
 
-        $supplierItems = $supplierItemsQuery->get();
+        $supplierItems = $supplierItemsQuery->paginate(10)->withQueryString();
 
         return view('masters.items_supplier', [
             'suppliers' => $suppliers,
@@ -57,7 +58,7 @@ class ItemController extends Controller
         $validated = $request->validate([
             'item_type' => ['required', 'string', 'in:supplier,regular'],
             'supplier_id' => ['nullable', 'integer', 'exists:suppliers,id'],
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255', 'unique:items,name'],
             'unit' => ['required', 'string', 'max:30'],
             'price' => ['nullable', 'integer', 'min:0'],
         ]);
@@ -101,7 +102,7 @@ class ItemController extends Controller
         $validated = $request->validate([
             'item_type' => ['required', 'string', 'in:supplier,regular'],
             'supplier_id' => ['nullable', 'integer', 'exists:suppliers,id'],
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255', 'unique:items,name,' . $item->id],
             'unit' => ['required', 'string', 'max:30'],
             'price' => ['nullable', 'integer', 'min:0'],
         ]);

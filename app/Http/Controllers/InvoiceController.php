@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\DB;
 
 class InvoiceController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $customers = Customer::query()->orderBy('name')->get();
         $pengirims = \App\Models\Pengirim::query()->orderBy('name')->get();
@@ -25,7 +25,8 @@ class InvoiceController extends Controller
             ->withCount('poPendingItems')
             ->orderByDesc('date')
             ->orderByDesc('id')
-            ->get();
+            ->paginate(5)
+            ->withQueryString();
 
         return view('invoices.index', [
             'customers' => $customers,
@@ -306,13 +307,14 @@ class InvoiceController extends Controller
         return $pdf->download($filename);
     }
 
-    public function poPending()
+    public function poPending(Request $request)
     {
         $rows = PoPendingItem::query()
             ->with(['customer', 'item', 'invoice'])
             ->orderByDesc('created_at')
             ->orderByDesc('id')
-            ->get();
+            ->paginate(5)
+            ->withQueryString();
 
         return view('invoices.po_pending', [
             'rows' => $rows,
@@ -420,8 +422,23 @@ class InvoiceController extends Controller
 
         $type = $result['type'] ?? 'success';
         $message = $result['message'] ?? null;
+        
+        // Get invoice for preview if successful
+        $invoice = null;
+        if (!empty($pending->invoice_id)) {
+            $invoice = Invoice::query()->find($pending->invoice_id);
+        }
+        
         if ($message) {
-            return redirect()->route('invoices.po_pending')->with($type, $message);
+            $redirect = redirect()->route('invoices.po_pending')->with($type, $message);
+            
+            // Add PDF preview URL if successful and has invoice
+            if ($type === 'success' && $invoice) {
+                $previewUrl = route('invoices.pdf', $invoice) . '?preview=1';
+                $redirect->with('show_pdf_preview', $previewUrl);
+            }
+            
+            return $redirect;
         }
 
         return redirect()->route('invoices.po_pending');
@@ -459,29 +476,36 @@ class InvoiceController extends Controller
             DB::transaction(function () use ($invoice) {
                 $invoice->refresh();
 
-                $pendingCount = PoPendingItem::query()
-                    ->where('invoice_id', $invoice->id)
-                    ->count();
-                if ($pendingCount > 0) {
-                    throw new \Exception('Invoice tidak bisa dihapus karena masih ada data di PO Belum Terkirim.');
+                // 1. Kembalikan stok dan hapus ItemOut (Data Laporan)
+                $details = InvoiceDetail::query()->where('invoice_id', $invoice->id)->get();
+                foreach ($details as $detail) {
+                    $item = Item::find($detail->item_id);
+                    if ($item) {
+                        $item->increment('stock', $detail->qty);
+                    }
+                    
+                    // Hapus data keluar terkait invoice ini (untuk sinkronisasi laporan/dashboard)
+                    ItemOut::query()
+                        ->where('customer_id', $invoice->customer_id)
+                        ->where('item_id', $detail->item_id)
+                        ->where('qty', $detail->qty)
+                        ->where('date', $invoice->date)
+                        ->where('type', 'sale')
+                        ->delete();
                 }
 
-                $approvalStatus = InvoiceApproval::query()
-                    ->where('invoice_id', $invoice->id)
-                    ->value('status');
-                if (($approvalStatus ?? 'pending') === 'accept') {
-                    throw new \Exception('Invoice yang sudah Accept tidak bisa dihapus.');
-                }
+                // 2. Hapus data di PO Belum Terkirim jika ada
+                PoPendingItem::query()->where('invoice_id', $invoice->id)->delete();
 
-                if (($invoice->status ?? '') !== 'draft') {
-                    throw new \Exception('Invoice yang sudah diproses tidak bisa dihapus.');
-                }
+                // 3. Hapus Approval status
+                InvoiceApproval::query()->where('invoice_id', $invoice->id)->delete();
 
+                // 4. Hapus Detail dan Invoice
                 InvoiceDetail::query()->where('invoice_id', $invoice->id)->delete();
                 $invoice->delete();
             });
 
-            return redirect()->route('invoices.index')->with('success', 'Invoice berhasil dihapus.');
+            return redirect()->route('invoices.index')->with('success', 'Invoice berhasil dihapus dan stok telah dikembalikan.');
         } catch (\Exception $e) {
             return redirect()->route('invoices.index')->with('error', $e->getMessage());
         }

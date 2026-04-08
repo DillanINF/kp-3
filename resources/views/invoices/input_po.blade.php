@@ -40,14 +40,25 @@
 
                 <div class="space-y-2">
                     <label class="text-sm font-semibold text-slate-700">Pengirim</label>
-                    <select name="pengirim_id" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" required>
+                    <select id="pengirim_select" name="pengirim_id" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" required>
                         <option value="">-- Pilih Pengirim --</option>
                         @foreach($pengirims as $p)
-                            <option value="{{ $p->id }}" {{ (string) $invoice->pengirim_id === (string) $p->id ? 'selected' : '' }}>
+                            <option value="{{ $p->id }}" 
+                                data-phone="{{ $p->phone }}" 
+                                data-vehicle="{{ $p->vehicle_type }}" 
+                                data-plate="{{ $p->license_plate }}"
+                                {{ (string) $invoice->pengirim_id === (string) $p->id ? 'selected' : '' }}>
                                 {{ $p->name }}
                             </option>
                         @endforeach
                     </select>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-sm font-semibold text-slate-700">Detail Pengirim</label>
+                    <div id="pengirim_detail" class="flex h-11 w-full items-center rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-600">
+                        <span class="italic text-slate-400">Pilih pengirim untuk melihat detail</span>
+                    </div>
                 </div>
 
                 <div class="col-span-full space-y-2">
@@ -190,6 +201,35 @@
 
             document.addEventListener('DOMContentLoaded', () => {
                 recalcRowTotals();
+                
+                // Info Pengirim Script
+                const pengirimSelect = document.getElementById('pengirim_select');
+                const pengirimDetail = document.getElementById('pengirim_detail');
+                
+                const updatePengirimDetail = () => {
+                    const opt = pengirimSelect.options[pengirimSelect.selectedIndex];
+                    if (!opt || !opt.value) {
+                        pengirimDetail.innerHTML = '<span class="italic text-slate-400">Pilih pengirim untuk melihat detail</span>';
+                        return;
+                    }
+                    
+                    const phone = opt.dataset.phone || '-';
+                    const vehicle = opt.dataset.vehicle || '-';
+                    const plate = opt.dataset.plate || '-';
+                    
+                    pengirimDetail.innerHTML = `
+                        <div class="flex gap-4">
+                            <span title="No. Telp">📞 ${phone}</span>
+                            <span title="Kendaraan">🚚 ${vehicle}</span>
+                            <span title="No. Polisi">🆔 ${plate}</span>
+                        </div>
+                    `;
+                };
+                
+                if (pengirimSelect) {
+                    pengirimSelect.addEventListener('change', updatePengirimDetail);
+                    updatePengirimDetail(); // Init on load
+                }
             });
         })();
     </script>
