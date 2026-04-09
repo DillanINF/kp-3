@@ -11,42 +11,60 @@
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="min-h-screen bg-slate-50 text-slate-900">
-        <div class="mx-auto flex min-h-screen max-w-7xl items-center justify-center px-4 py-10">
-            <div class="w-full max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                <div class="border-b border-slate-200 bg-white px-6 py-5">
-                    <div class="text-lg font-semibold text-slate-900">Masuk</div>
-                    <div class="mt-1 text-sm text-slate-500">Gunakan akun yang sudah dibuat oleh admin.</div>
+    <body class="min-h-screen bg-[#f3f4f6] text-slate-900 font-['Instrument_Sans']">
+        <div class="flex min-h-screen items-center justify-center px-4 py-12">
+            <div class="flex w-full max-w-[1000px] overflow-hidden rounded-[2rem] bg-white shadow-2xl border border-slate-100">
+                <!-- Left Side: Illustration -->
+                <div class="relative hidden w-1/2 bg-slate-50 lg:flex items-center justify-center p-12">
+                    <div class="w-full max-w-[450px]">
+                        <img src="https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&q=80&w=1000" 
+                             alt="Working Illustration" 
+                             class="w-full h-auto rounded-2xl shadow-lg transition-transform duration-700 hover:scale-105" />
+                        <div class="mt-10 text-center">
+                            <h2 class="text-2xl font-bold text-slate-800 tracking-tight">Kelola Pekerjaan Anda</h2>
+                            <p class="mt-2 text-sm text-slate-500 font-medium">Sistem manajemen terintegrasi untuk efisiensi bisnis Anda.</p>
+                        </div>
+                    </div>
                 </div>
 
-                <form method="POST" action="{{ route('login.store') }}" class="space-y-4 px-6 py-6">
-                    @csrf
-
-                    <div class="space-y-2">
-                        <label class="text-sm font-semibold text-slate-700">Email</label>
-                        <input name="email" value="{{ old('email') }}" type="email" autocomplete="email" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100" required />
-                        @error('email')
-                            <div class="text-xs text-red-600">{{ $message }}</div>
-                        @enderror
+                <!-- Right Side: Login Form -->
+                <div class="w-full p-8 sm:p-14 lg:w-1/2">
+                    <div class="mb-12">
+                       
+                        <h1 class="text-3xl font-bold text-slate-900 tracking-tight">Sign In</h1>
+                        <p class="mt-2 text-sm text-slate-500 font-medium italic">Silakan masuk menggunakan kredensial Anda.</p>
                     </div>
 
-                    <div class="space-y-2">
-                        <label class="text-sm font-semibold text-slate-700">Password</label>
-                        <input name="password" type="password" autocomplete="current-password" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100" required />
-                        @error('password')
-                            <div class="text-xs text-red-600">{{ $message }}</div>
-                        @enderror
-                    </div>
+                    <form method="POST" action="{{ route('login.store') }}" class="space-y-6">
+                        @csrf
 
-                    <label class="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
-                        <input name="remember" type="checkbox" value="1" class="h-4 w-4 rounded border-slate-300" />
-                        Remember me
-                    </label>
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 ml-1">Username / Email</label>
+                            <input name="email" value="{{ old('email') }}" type="email" autocomplete="email" placeholder="name@company.com" 
+                                class="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-medium outline-none transition-all focus:border-indigo-600 focus:bg-white placeholder:text-slate-300" required />
+                            @error('email')
+                                <p class="text-[11px] font-medium text-red-600 ml-1 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
 
-                    <button type="submit" class="inline-flex h-11 w-full items-center justify-center rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-800">
-                        Login
-                    </button>
-                </form>
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 ml-1">Password</label>
+                            <input name="password" type="password" autocomplete="current-password" placeholder="••••••••" 
+                                class="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-medium outline-none transition-all focus:border-indigo-600 focus:bg-white placeholder:text-slate-300" required />
+                            @error('password')
+                                <p class="text-[11px] font-medium text-red-600 ml-1 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <button type="submit" class="group h-12 w-full rounded-xl bg-indigo-600 text-sm font-bold text-white shadow-xl shadow-indigo-200 transition-all hover:bg-indigo-700 hover:shadow-indigo-300 active:scale-[0.98]">
+                            <span class="flex items-center justify-center gap-2">
+                                Sign In
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-hover:translate-x-1"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                            </span>
+                        </button>
+                       
+                    </form>
+                </div>
             </div>
         </div>
     </body>

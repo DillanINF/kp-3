@@ -28,7 +28,6 @@
     <div class="rounded-xl border border-slate-200 bg-white">
         <div class="flex items-center justify-between border-b border-slate-200 p-4">
             <div class="text-sm font-semibold text-slate-900">PO Belum Terkirim</div>
-            <button type="button" class="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">Export</button>
         </div>
 
         <div class="overflow-x-auto">

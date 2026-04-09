@@ -44,7 +44,7 @@
                         @endforelse
                     </tbody>
                     @if($history->count() > 0)
-                        <tfoot class="bg-slate-50">
+                        <tfoot class="bg-slate-20">
                             <tr>
                                 <td colspan="4" class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">Subtotal</td>
                                 <td class="px-4 py-3 text-right text-sm font-semibold text-slate-900">Rp {{ number_format((int) ($historyGrandTotal ?? 0), 0, ',', '.') }}</td>
